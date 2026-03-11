@@ -1,0 +1,141 @@
+<section class="range-page">
+  <div class="range-page__header">
+    <div>
+      <h1>Ranges hero</h1>
+      <p>Chargez une range par contexte, editez la matrice 13x13 puis sauvegardez en une seule operation.</p>
+    </div>
+    <div class="range-page__actions">
+      <button mat-stroked-button type="button" (click)="newRange()">Nouvelle range</button>
+      <button mat-flat-button color="primary" type="button" (click)="saveRange()">Sauvegarder</button>
+      <button mat-button type="button" [disabled]="!currentRangeId" (click)="deleteRange()">Supprimer</button>
+    </div>
+  </div>
+
+  <div class="range-page__grid">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Contexte hero</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="filtersForm" class="range-page__form">
+          <mat-form-field appearance="outline">
+            <mat-label>Profil</mat-label>
+            <mat-select formControlName="profileId">
+              <mat-option *ngFor="let profile of profiles" [value]="profile.id">{{ profile.name }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Type de jeu</mat-label>
+            <mat-select formControlName="gameType">
+              <mat-option *ngFor="let option of gameTypes" [value]="option">{{ option | readableCode }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Street</mat-label>
+            <mat-select formControlName="street">
+              <mat-option *ngFor="let option of streets" [value]="option">{{ option | readableCode }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Position hero</mat-label>
+            <mat-select formControlName="heroPosition">
+              <mat-option *ngFor="let option of positions" [value]="option">{{ option | readableCode }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Scenario</mat-label>
+            <mat-select formControlName="scenarioType">
+              <mat-option *ngFor="let option of scenarioTypes" [value]="option">{{ option | readableCode }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Sous-scenario</mat-label>
+            <input matInput formControlName="subScenarioCode" />
+          </mat-form-field>
+        </form>
+        <button mat-stroked-button type="button" (click)="loadByContext()">Charger par contexte</button>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>{{ currentRangeName }}</mat-card-title>
+        <mat-card-subtitle>Metadonnees de la range</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="metadataForm" class="range-page__form">
+          <mat-form-field appearance="outline">
+            <mat-label>Nom</mat-label>
+            <input matInput formControlName="name" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Description</mat-label>
+            <textarea matInput rows="3" formControlName="description"></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Priorite</mat-label>
+            <input matInput type="number" formControlName="priority" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Notes</mat-label>
+            <textarea matInput rows="4" formControlName="notes"></textarea>
+          </mat-form-field>
+
+          <mat-checkbox formControlName="enabled">Range active</mat-checkbox>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Ranges du profil</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="range-page__summary-list">
+        <button mat-button type="button" *ngFor="let range of rangeSummaries" (click)="openRange(range.id)">
+          {{ range.name }} - {{ range.heroPosition | readableCode }} - {{ range.scenarioType | readableCode }}
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <p *ngIf="warningMessage" class="range-page__warning">{{ warningMessage }}</p>
+  <p *ngIf="feedbackMessage" class="range-page__feedback">{{ feedbackMessage }}</p>
+
+  <div class="range-page__workspace">
+    <mat-card class="range-page__matrix-card">
+      <mat-card-header>
+        <div>
+          <mat-card-title>Matrice hero 13x13</mat-card-title>
+          <mat-card-subtitle>Clic = selection, Ctrl/Cmd + clic = multi-selection, double-clic = activer/desactiver</mat-card-subtitle>
+        </div>
+      </mat-card-header>
+      <mat-card-content class="range-page__matrix-content">
+        <div class="range-page__selection-bar">
+          <mat-chip-set>
+            <mat-chip>{{ selectionCount }} main(s) selectionnee(s)</mat-chip>
+          </mat-chip-set>
+          <button mat-button type="button" [disabled]="selectionCount === 0" (click)="clearSelection()">Vider la selection</button>
+        </div>
+
+        <app-poker-hand-matrix
+          [cells]="matrixCells"
+          [selectedHandCodes]="selectedHandCodes"
+          (selectHandCode)="selectHandCode($event)"
+          (toggleHandCode)="toggleHandCode($event)"></app-poker-hand-matrix>
+      </mat-card-content>
+    </mat-card>
+
+    <app-hero-range-cell-editor
+      [handCodes]="selectedHandCodes"
+      [cells]="selectedCells"
+      (patchCell)="patchSelectedCell($event)"></app-hero-range-cell-editor>
+  </div>
+</section>

@@ -1,0 +1,42 @@
+.cell-editor {
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.cell-editor__form {
+  display: grid;
+  gap: 1rem;
+}
+
+.cell-editor__color-row {
+  align-items: center;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 160px minmax(0, 1fr);
+}
+
+.cell-editor__color-picker {
+  align-items: start;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.cell-editor__color-picker span {
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.cell-editor__color-picker input {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  height: 2.5rem;
+  padding: 0;
+  width: 100%;
+}
+
+.cell-editor__hint {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin: 0;
+}

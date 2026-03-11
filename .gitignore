@@ -1,0 +1,22 @@
+# Build outputs
+back/target/
+front/dist/
+front/.angular/
+front/coverage/
+front/node_modules/
+
+# Temp files
+.tmp-pdf/
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local env
+.env
+.env.*

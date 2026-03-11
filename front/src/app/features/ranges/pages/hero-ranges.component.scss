@@ -1,0 +1,79 @@
+.range-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.range-page__header,
+.range-page__workspace,
+.range-page__grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.range-page__header {
+  align-items: start;
+  grid-template-columns: 1fr auto;
+}
+
+.range-page__actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.range-page__form {
+  display: grid;
+  gap: 1rem;
+}
+
+.range-page__grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.range-page__workspace {
+  align-items: start;
+  grid-template-columns: minmax(0, 2.6fr) minmax(320px, 0.9fr);
+}
+
+.range-page__matrix-card {
+  overflow: hidden;
+}
+
+.range-page__matrix-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.range-page__selection-bar {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.range-page__summary-list {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.range-page__warning {
+  color: #b45309;
+  margin: 0;
+}
+
+.range-page__feedback {
+  color: #047857;
+  margin: 0;
+}
+
+@media (max-width: 1280px) {
+  .range-page__grid,
+  .range-page__workspace,
+  .range-page__header {
+    grid-template-columns: 1fr;
+  }
+
+  .range-page__selection-bar {
+    align-items: start;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}

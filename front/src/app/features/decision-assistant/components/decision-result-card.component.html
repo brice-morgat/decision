@@ -1,0 +1,15 @@
+<div class="card" *ngIf="result">
+  <div class="title">Decision</div>
+  <div class="row"><span>Status</span><strong>{{ result.status | readableCode }}</strong></div>
+  <div class="row"><span>Action</span><strong>{{ (result.recommendedAction || '-') | readableCode }}</strong></div>
+  <div class="row"><span>Sizing</span><strong>{{ result.recommendedSizingValue ?? '-' }}</strong></div>
+  <div class="row"><span>Regle</span><strong>{{ result.matchedRuleName || '-' }}</strong></div>
+  <div class="stacked" *ngIf="result.explanation">
+    <span>Explication</span>
+    <strong>{{ result.explanation }}</strong>
+  </div>
+  <div class="stacked" *ngIf="result.warnings.length">
+    <span>Warnings</span>
+    <strong>{{ result.warnings.join(' · ') }}</strong>
+  </div>
+</div>

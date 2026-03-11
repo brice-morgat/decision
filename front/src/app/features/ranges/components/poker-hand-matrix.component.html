@@ -1,0 +1,28 @@
+<div class="matrix">
+  <div class="matrix__header"></div>
+  <div *ngFor="let rank of handRanks" class="matrix__header">{{ rank }}</div>
+
+  <ng-container *ngFor="let row of matrix; let rowIndex = index">
+    <div class="matrix__header">{{ handRanks[rowIndex] }}</div>
+    <div
+      *ngFor="let handCode of row; trackBy: trackByHandCode"
+      class="matrix__cell"
+      [class.matrix__cell--enabled]="getCell(handCode)?.enabled"
+      [class.matrix__cell--selected]="isSelected(handCode)"
+      [class.matrix__cell--pair]="handCode.length === 2"
+      [class.matrix__cell--suited]="handCode.endsWith('S')"
+      [class.matrix__cell--offsuit]="handCode.endsWith('O')"
+      [class.matrix__cell--meta]="hasMetadata(handCode)"
+      [style.--cell-accent]="getCell(handCode)?.accentColor || '#facc15'"
+      [attr.title]="cellTooltip(handCode)"
+      (click)="onSelect($event, handCode)"
+      (dblclick)="onToggle($event, handCode)">
+      <span class="matrix__hand">{{ displayHandCode(handCode) }}</span>
+      <span class="matrix__corner" *ngIf="getCell(handCode)?.enabled"></span>
+      <span class="matrix__meta" *ngIf="hasMetadata(handCode)">
+        <span *ngIf="getCell(handCode)?.badge">{{ getCell(handCode)?.badge | readableCode }}</span>
+        <span *ngIf="!getCell(handCode)?.badge && getCell(handCode)?.weight != null">{{ getCell(handCode)?.weight }}%</span>
+      </span>
+    </div>
+  </ng-container>
+</div>

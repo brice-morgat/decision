@@ -1,0 +1,56 @@
+<section class="rule-block">
+  <header class="rule-block__header">
+    <div>
+      <p class="rule-block__eyebrow">Actions</p>
+      <h3>Execution</h3>
+      <p>La premiere action ordonnee devient la recommandation principale retournee par le moteur.</p>
+    </div>
+    <button mat-stroked-button color="primary" type="button" (click)="addAction.emit()">Ajouter une action</button>
+  </header>
+
+  <div class="rule-block__list" *ngIf="actions.length; else emptyState">
+    <mat-card class="rule-action-card" appearance="outlined" *ngFor="let control of actions.controls; let i = index; trackBy: trackByIndex" [formGroup]="asFormGroup(control)">
+      <div class="rule-action-card__topbar">
+        <strong>Action {{ i + 1 }}</strong>
+        <button mat-button type="button" (click)="removeAction.emit(i)">Supprimer</button>
+      </div>
+
+      <div class="rule-action-card__grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Action</mat-label>
+          <mat-select formControlName="actionType">
+            <mat-option *ngFor="let option of actionTypes" [value]="option">{{ option | readableCode }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Sizing</mat-label>
+          <mat-select formControlName="sizingType">
+            <mat-option *ngFor="let option of sizingTypes" [value]="option">{{ option | readableCode }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Ordre</mat-label>
+          <input matInput type="number" formControlName="executionOrder" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" *ngIf="requiresSizingValue(control)">
+          <mat-label>Valeur sizing</mat-label>
+          <input matInput type="number" formControlName="sizingValue" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="rule-action-card__wide">
+          <mat-label>Message affiche</mat-label>
+          <input matInput formControlName="messageTemplate" />
+        </mat-form-field>
+      </div>
+    </mat-card>
+  </div>
+
+  <ng-template #emptyState>
+    <mat-card class="rule-empty-card" appearance="outlined">
+      Une regle doit contenir au moins une action. Commencez par definir la recommandation principale.
+    </mat-card>
+  </ng-template>
+</section>

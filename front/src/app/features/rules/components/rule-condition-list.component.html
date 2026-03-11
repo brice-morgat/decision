@@ -1,0 +1,76 @@
+<section class="rule-block">
+  <header class="rule-block__header">
+    <div>
+      <p class="rule-block__eyebrow">Conditions</p>
+      <h3>Matching</h3>
+      <p>Chaque condition doit matcher pour rendre la regle eligible.</p>
+    </div>
+    <button mat-stroked-button type="button" (click)="addCondition.emit()">Ajouter une condition</button>
+  </header>
+
+  <div class="rule-block__list" *ngIf="conditions.length; else emptyState">
+    <mat-card class="rule-condition-card" appearance="outlined" *ngFor="let control of conditions.controls; let i = index; trackBy: trackByIndex" [formGroup]="asFormGroup(control)">
+      <div class="rule-condition-card__topbar">
+        <strong>Condition {{ i + 1 }}</strong>
+        <button mat-button type="button" (click)="removeCondition.emit(i)">Supprimer</button>
+      </div>
+
+      <div class="rule-condition-card__grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Champ</mat-label>
+          <mat-select formControlName="conditionType" (selectionChange)="onConditionTypeChange(i)">
+            <mat-option *ngFor="let option of conditionTypes" [value]="option">{{ option | readableCode }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Type de valeur</mat-label>
+          <mat-select formControlName="valueType">
+            <mat-option [value]="asFormGroup(control).get('valueType')?.value">
+              {{ asFormGroup(control).get('valueType')?.value | readableCode }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Operateur</mat-label>
+          <mat-select formControlName="operator">
+            <mat-option *ngFor="let option of operatorsFor(control)" [value]="option">{{ option | readableCode }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Ordre</mat-label>
+          <input matInput type="number" formControlName="conditionOrder" />
+        </mat-form-field>
+
+        <ng-container *ngIf="expectedValueOptions(control) as options; else freeValue">
+          <mat-form-field appearance="outline" class="rule-condition-card__wide">
+            <mat-label>Valeur attendue</mat-label>
+            <mat-select formControlName="expectedValue">
+              <mat-option *ngFor="let option of options" [value]="option.value">{{ option.label | readableCode }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </ng-container>
+
+        <ng-template #freeValue>
+          <mat-form-field appearance="outline" class="rule-condition-card__wide">
+            <mat-label>Valeur attendue</mat-label>
+            <input matInput formControlName="expectedValue" />
+          </mat-form-field>
+        </ng-template>
+
+        <mat-form-field appearance="outline" class="rule-condition-card__wide" *ngIf="shouldShowSecondaryValue(control)">
+          <mat-label>Valeur secondaire</mat-label>
+          <input matInput formControlName="secondaryValue" />
+        </mat-form-field>
+      </div>
+    </mat-card>
+  </div>
+
+  <ng-template #emptyState>
+    <mat-card class="rule-empty-card" appearance="outlined">
+      Ajoutez une condition si vous voulez restreindre le contexte. Une regle sans condition reste globale au spot.
+    </mat-card>
+  </ng-template>
+</section>

@@ -1,0 +1,59 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="form" *ngIf="profiles$ | async as profiles">
+  <label>
+    Profil
+    <select formControlName="strategyProfileId">
+      <option value="" disabled>Selectionner</option>
+      <option *ngFor="let profile of profiles" [value]="profile.id">{{ profile.name }}</option>
+    </select>
+  </label>
+
+  <label>
+    Position hero
+    <select formControlName="heroPosition">
+      <option *ngFor="let pos of positions" [value]="pos">{{ pos | readableCode }}</option>
+    </select>
+  </label>
+
+  <label>
+    Position vilain
+    <select formControlName="villainPosition">
+      <option *ngFor="let pos of positions" [value]="pos">{{ pos | readableCode }}</option>
+    </select>
+  </label>
+
+  <label>
+    Scenario
+    <select formControlName="scenarioType">
+      <option *ngFor="let scenario of scenarioTypes" [value]="scenario">{{ scenario | readableCode }}</option>
+    </select>
+  </label>
+
+  <label>
+    Street
+    <select formControlName="street">
+      <option *ngFor="let street of streets" [value]="street">{{ street | readableCode }}</option>
+    </select>
+  </label>
+
+  <label>
+    Stack effectif (bb)
+    <input type="number" formControlName="effectiveStackInBigBlinds" />
+  </label>
+
+  <label>
+    Pot (bb)
+    <input type="number" formControlName="potSizeInBigBlinds" />
+  </label>
+
+  <label>
+    Main hero
+    <input type="text" formControlName="heroCards" placeholder="As,Kh" />
+  </label>
+
+  <label>
+    Board (comma-separated)
+    <input type="text" formControlName="boardCards" placeholder="Ah,Kd,7s" />
+  </label>
+
+  <button type="submit">Evaluer</button>
+</form>

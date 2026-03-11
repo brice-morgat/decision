@@ -1,0 +1,59 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h2>Profils strategiques</h2>
+      <p>Bascules rapides entre tes configurations de cash game, tournoi ou exploit.</p>
+    </div>
+    <button mat-flat-button color="primary" type="button" (click)="createProfile()">
+      Nouveau profil
+    </button>
+  </header>
+
+  <div class="profiles-grid" *ngIf="profiles$ | async as profiles">
+    <mat-card class="glass-card intro-card" appearance="outlined">
+      <p class="intro-card__eyebrow">Workflow conseille</p>
+      <h3>Un profil par contexte de travail</h3>
+      <p>
+        Garde un profil actif par type de jeu, duplique les variantes et reserve l'archivage
+        aux strategies sorties du pool courant.
+      </p>
+    </mat-card>
+
+    <mat-card class="glass-card profile-card" appearance="outlined" *ngFor="let profile of profiles; trackBy: trackById">
+      <div class="profile-card__header">
+        <div>
+          <h3>{{ profile.name }}</h3>
+          <p>{{ profile.gameType }} · {{ profile.versionLabel }}</p>
+        </div>
+
+        <mat-chip-set>
+          <mat-chip [class.chip-positive]="profile.active" [class.chip-neutral]="!profile.active">
+            {{ profile.active ? 'Actif' : 'Inactif' }}
+          </mat-chip>
+          <mat-chip *ngIf="profile.archived" class="chip-warn">Archive</mat-chip>
+        </mat-chip-set>
+      </div>
+
+      <p class="profile-card__description">{{ profile.description || 'Aucune note strategique.' }}</p>
+
+      <mat-divider></mat-divider>
+
+      <div class="profile-card__footer">
+        <span>Maj {{ profile.updatedAt | date:'dd/MM HH:mm' }}</span>
+        <div class="profile-card__actions">
+          <button mat-stroked-button type="button" (click)="editProfile(profile.id)">Modifier</button>
+          <button
+            mat-stroked-button
+            color="primary"
+            type="button"
+            (click)="activateProfile(profile.id)"
+            [disabled]="profile.active || profile.archived">
+            Activer
+          </button>
+          <button mat-button type="button" (click)="duplicateProfile(profile)">Dupliquer</button>
+          <button mat-button type="button" (click)="deleteProfile(profile)">Supprimer</button>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</section>

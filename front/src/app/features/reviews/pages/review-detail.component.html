@@ -1,0 +1,7 @@
+<h2>Detail review</h2>
+<div *ngIf="review$ | async as review">
+  <div><strong>{{ review.label }}</strong> ({{ review.status }})</div>
+  <div>Expected: {{ review.expectedAction }}</div>
+  <div>Actual: {{ review.actualAction }}</div>
+  <p>{{ review.notes }}</p>
+</div>

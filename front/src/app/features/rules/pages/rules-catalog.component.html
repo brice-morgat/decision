@@ -1,0 +1,71 @@
+<section class="page" *ngIf="viewModel$ | async as vm">
+  <app-rule-filters
+    [form]="filtersForm"
+    [profiles]="vm.profiles"
+    (applyFilters)="applyFilters()"
+    (resetFilters)="resetFilters()"
+    (createRule)="createRule()"></app-rule-filters>
+
+  <div class="rules-grid">
+    <mat-card class="glass-card intro-card" appearance="outlined">
+      <p class="intro-card__eyebrow">Resolution</p>
+      <h3>Priorite puis specificite</h3>
+      <p>
+        Le moteur prend d'abord la priorite la plus forte, puis tranche par specificite de contexte.
+        Garde les regles globales au minimum et reserve les exceptions aux spots clairement identifies.
+      </p>
+    </mat-card>
+
+    <mat-card class="glass-card rule-card" appearance="outlined" *ngFor="let rule of vm.rules; trackBy: trackById">
+      <div class="rule-card__header">
+        <div>
+          <h3>{{ rule.name }}</h3>
+          <p>
+            {{ rule.gameType | readableCode }} · {{ rule.street | readableCode }} ·
+            {{ rule.scenarioType | readableCode }}
+          </p>
+        </div>
+
+        <mat-chip-set>
+          <mat-chip [class.chip-positive]="rule.enabled" [class.chip-neutral]="!rule.enabled">
+            {{ rule.enabled ? 'Active' : 'Inactive' }}
+          </mat-chip>
+          <mat-chip *ngIf="rule.stopOnMatch" class="chip-warn">Stop on match</mat-chip>
+          <mat-chip>Prio {{ rule.priority }}</mat-chip>
+        </mat-chip-set>
+      </div>
+
+      <p class="rule-card__description">{{ rule.description || 'Aucune description.' }}</p>
+
+      <dl class="rule-card__meta">
+        <div>
+          <dt>Hero</dt>
+          <dd>{{ (rule.heroPosition || 'ALL') | readableCode }}</dd>
+        </div>
+        <div>
+          <dt>Vilain</dt>
+          <dd>{{ (rule.villainPosition || 'ALL') | readableCode }}</dd>
+        </div>
+        <div>
+          <dt>Conditions</dt>
+          <dd>{{ rule.conditionCount }}</dd>
+        </div>
+        <div>
+          <dt>Actions</dt>
+          <dd>{{ rule.actionCount }}</dd>
+        </div>
+      </dl>
+
+      <mat-divider></mat-divider>
+
+      <div class="rule-card__footer">
+        <span>Maj {{ rule.updatedAt | date:'dd/MM HH:mm' }}</span>
+        <div class="rule-card__actions">
+          <button mat-stroked-button color="primary" type="button" (click)="openRule(rule.id)">Editer</button>
+          <button mat-button type="button" (click)="duplicateRule(rule)">Dupliquer</button>
+          <button mat-button type="button" (click)="deleteRule(rule)">Supprimer</button>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</section>

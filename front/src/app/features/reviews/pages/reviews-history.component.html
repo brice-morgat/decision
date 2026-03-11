@@ -1,0 +1,7 @@
+<h2>Historique de review</h2>
+<ul>
+  <li *ngFor="let review of reviews$ | async">
+    <a [routerLink]="['/reviews', review.id]">{{ review.label }}</a>
+    <span class="meta">{{ review.status }}</span>
+  </li>
+</ul>

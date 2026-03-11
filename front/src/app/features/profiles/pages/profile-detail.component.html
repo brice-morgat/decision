@@ -1,0 +1,55 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h2>{{ isCreateMode ? 'Nouveau profil' : 'Edition du profil' }}</h2>
+      <p>Definis le cadre de jeu, la version et l'etat d'activation du profil.</p>
+    </div>
+
+    <div *ngIf="!isCreateMode" class="detail-actions">
+      <button mat-stroked-button color="primary" type="button" (click)="activateProfile()">Activer</button>
+      <button mat-button type="button" (click)="deleteProfile()">Supprimer</button>
+    </div>
+  </header>
+
+  <div class="detail-layout">
+    <mat-card class="glass-card detail-card" appearance="outlined">
+      <app-profile-form
+        [profile]="profile$ | async"
+        (saveProfile)="saveProfile($event)">
+      </app-profile-form>
+    </mat-card>
+
+    <mat-card class="glass-card side-card" appearance="outlined" *ngIf="profile$ | async as profile">
+      <p class="side-card__eyebrow">Synthese rapide</p>
+      <h3>{{ profile.name }}</h3>
+
+      <mat-chip-set>
+        <mat-chip [class.chip-positive]="profile.active" [class.chip-neutral]="!profile.active">
+          {{ profile.active ? 'Actif' : 'Inactif' }}
+        </mat-chip>
+        <mat-chip *ngIf="profile.archived" class="chip-warn">Archive</mat-chip>
+      </mat-chip-set>
+
+      <mat-divider></mat-divider>
+
+      <dl class="meta-list">
+        <div>
+          <dt>Type</dt>
+          <dd>{{ profile.gameType }}</dd>
+        </div>
+        <div>
+          <dt>Version</dt>
+          <dd>{{ profile.versionLabel }}</dd>
+        </div>
+        <div>
+          <dt>Cree le</dt>
+          <dd>{{ profile.createdAt | date:'dd/MM/yyyy HH:mm' }}</dd>
+        </div>
+        <div>
+          <dt>Mis a jour</dt>
+          <dd>{{ profile.updatedAt | date:'dd/MM/yyyy HH:mm' }}</dd>
+        </div>
+      </dl>
+    </mat-card>
+  </div>
+</section>

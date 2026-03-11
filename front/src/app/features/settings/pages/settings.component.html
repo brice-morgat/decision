@@ -1,0 +1,19 @@
+<h2>Parametres</h2>
+<form [formGroup]="form" (ngSubmit)="save()">
+  <label>
+    Profil par defaut
+    <input type="text" formControlName="defaultProfileId" />
+  </label>
+
+  <label>
+    Sauvegarde auto
+    <input type="checkbox" formControlName="autoSave" />
+  </label>
+
+  <label>
+    Telemetrie
+    <input type="checkbox" formControlName="telemetryEnabled" />
+  </label>
+
+  <button type="submit">Enregistrer</button>
+</form>

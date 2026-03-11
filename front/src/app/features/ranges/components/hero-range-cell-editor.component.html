@@ -1,0 +1,39 @@
+<mat-card class="cell-editor">
+  <mat-card-header>
+    <mat-card-title>{{ title }}</mat-card-title>
+    <mat-card-subtitle>{{ selectedHandLabel }}</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <form [formGroup]="form" class="cell-editor__form">
+      <mat-checkbox formControlName="enabled">Main active</mat-checkbox>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Legende strategique</mat-label>
+        <mat-select formControlName="legendCode">
+          <mat-option [value]="null">Aucune</mat-option>
+          <mat-option *ngFor="let option of legendOptions" [value]="option">{{ option | readableCode }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="cell-editor__color-row">
+        <label class="cell-editor__color-picker">
+          <span>Couleur d'affichage</span>
+          <input type="color" formControlName="colorCode" />
+        </label>
+        <mat-form-field appearance="outline">
+          <mat-label>Code couleur</mat-label>
+          <input matInput formControlName="colorCode" placeholder="#93c5fd" />
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Note</mat-label>
+        <textarea matInput formControlName="note" rows="5"></textarea>
+      </mat-form-field>
+
+      <p class="cell-editor__hint">
+        Saisissez une valeur une fois pour l'appliquer a toute la selection. La couleur reste purement visuelle.
+      </p>
+    </form>
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,34 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="profile-form">
+  <div class="profile-form__grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Nom du profil</mat-label>
+      <input matInput type="text" formControlName="name" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Type de jeu</mat-label>
+      <mat-select formControlName="gameType">
+        <mat-option *ngFor="let type of gameTypes" [value]="type">{{ type }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Version</mat-label>
+      <input matInput type="text" formControlName="versionLabel" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="profile-form__description">
+      <mat-label>Notes strategiques</mat-label>
+      <textarea matInput rows="6" formControlName="description"></textarea>
+    </mat-form-field>
+  </div>
+
+  <div class="profile-form__toggles">
+    <mat-checkbox formControlName="active">Activer ce profil apres enregistrement</mat-checkbox>
+    <mat-checkbox formControlName="archived">Archiver ce profil</mat-checkbox>
+  </div>
+
+  <div class="profile-form__actions">
+    <button mat-flat-button color="primary" type="submit">Enregistrer le profil</button>
+  </div>
+</form>

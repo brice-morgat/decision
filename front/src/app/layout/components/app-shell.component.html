@@ -1,0 +1,47 @@
+<div class="shell-background"></div>
+
+<mat-sidenav-container class="shell-container">
+  <mat-sidenav class="shell-sidenav" mode="side" opened [disableClose]="true">
+    <section class="brand-panel">
+      <span class="brand-panel__eyebrow">Lamuerta Poker Intelligence</span>
+      <h1>Decision studio</h1>
+      <p>Desktop assistant pour construire des ranges, regler les spots et reviser les mains.</p>
+    </section>
+
+    <mat-divider></mat-divider>
+
+    <mat-nav-list class="nav-list">
+      <a
+        mat-list-item
+        *ngFor="let item of navItems"
+        [routerLink]="item.link"
+        routerLinkActive="active-link">
+        <span matListItemTitle>{{ item.label }}</span>
+        <span matListItemLine>{{ item.hint }}</span>
+      </a>
+    </mat-nav-list>
+
+    <div class="sidenav-footer">
+      <mat-card class="glass-card quick-card" appearance="outlined">
+        <p class="quick-card__eyebrow">Desktop stack</p>
+        <strong>Angular + Electron</strong>
+        <span>UI locale, backend Spring Boot, distribution Windows.</span>
+      </mat-card>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="shell-content">
+    <mat-toolbar class="top-bar">
+      <div class="top-bar__title">
+        <span class="top-bar__eyebrow">Poker decision desk</span>
+        <strong>Travail de strategie et review</strong>
+      </div>
+      <span class="spacer"></span>
+      <div class="top-bar__status">Mode local securise</div>
+    </mat-toolbar>
+
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

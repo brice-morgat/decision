@@ -1,0 +1,28 @@
+<mat-card class="cell-editor">
+  <mat-card-header>
+    <mat-card-title>{{ title }}</mat-card-title>
+    <mat-card-subtitle>{{ selectedHandLabel }}</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <form [formGroup]="form" class="cell-editor__form">
+      <mat-checkbox formControlName="enabled">Main active</mat-checkbox>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Poids</mat-label>
+        <input matInput type="number" formControlName="weight" min="0" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Tag utilisateur</mat-label>
+        <input matInput formControlName="tagCode" placeholder="Range de call" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Note</mat-label>
+        <textarea matInput formControlName="note" rows="5"></textarea>
+      </mat-form-field>
+
+      <p class="cell-editor__hint">Les champs modifies sont appliques a toutes les mains selectionnees.</p>
+    </form>
+  </mat-card-content>
+</mat-card>

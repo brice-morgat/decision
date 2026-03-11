@@ -1,0 +1,14 @@
+.cell-editor {
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.cell-editor__form {
+  display: grid;
+  gap: 1rem;
+}
+
+.cell-editor__hint {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin: 0;
+}

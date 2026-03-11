@@ -1,0 +1,109 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+$lamuerta-primary: mat.define-palette(mat.$cyan-palette, 700, 300, 900);
+$lamuerta-accent: mat.define-palette(mat.$orange-palette, 600, 300, 800);
+$lamuerta-warn: mat.define-palette(mat.$red-palette, 700);
+$lamuerta-typography: mat.define-typography-config(
+  $font-family: 'Bahnschrift, "Segoe UI Variable", "Segoe UI", sans-serif'
+);
+$lamuerta-theme: mat.define-light-theme((
+  color: (
+    primary: $lamuerta-primary,
+    accent: $lamuerta-accent,
+    warn: $lamuerta-warn
+  ),
+  typography: $lamuerta-typography,
+  density: -2
+));
+
+html {
+  @include mat.all-component-themes($lamuerta-theme);
+  color-scheme: light;
+}
+
+:root {
+  --app-bg: #eef3f6;
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-strong: rgba(255, 255, 255, 0.94);
+  --border: rgba(20, 32, 46, 0.08);
+  --ink: #16202e;
+  --ink-soft: #526173;
+  --accent: #006a6a;
+  --accent-soft: #d3f1ee;
+  --warn-soft: #fff2dc;
+  --shadow: 0 18px 44px rgba(16, 33, 48, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Bahnschrift', 'Segoe UI Variable', 'Segoe UI', sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(0, 153, 153, 0.15), transparent 32%),
+    radial-gradient(circle at top right, rgba(247, 148, 29, 0.16), transparent 28%),
+    linear-gradient(180deg, #f9fbfc 0%, #edf3f5 100%);
+}
+
+.page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 1.85rem;
+  line-height: 1.1;
+}
+
+.page-header p {
+  margin: 0.35rem 0 0;
+  color: var(--ink-soft);
+  max-width: 56ch;
+}
+
+.glass-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.chip-positive {
+  background: #daf4df !important;
+  color: #135b26 !important;
+}
+
+.chip-neutral {
+  background: #e6edf3 !important;
+  color: #415468 !important;
+}
+
+.chip-warn {
+  background: var(--warn-soft) !important;
+  color: #7d4b00 !important;
+}
+
+@media (max-width: 960px) {
+  .page-header {
+    flex-direction: column;
+  }
+}
