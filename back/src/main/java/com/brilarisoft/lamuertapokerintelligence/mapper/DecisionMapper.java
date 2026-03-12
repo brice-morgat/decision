@@ -6,7 +6,6 @@ import com.brilarisoft.lamuertapokerintelligence.domain.decision.BoardState;
 import com.brilarisoft.lamuertapokerintelligence.domain.decision.DecisionInput;
 import com.brilarisoft.lamuertapokerintelligence.domain.decision.DecisionResult;
 import com.brilarisoft.lamuertapokerintelligence.domain.range.PokerHandCodeCatalog;
-import com.brilarisoft.lamuertapokerintelligence.domain.referential.GameType;
 import com.brilarisoft.lamuertapokerintelligence.domain.referential.SizingType;
 import com.brilarisoft.lamuertapokerintelligence.dto.decision.ActionEventDto;
 import com.brilarisoft.lamuertapokerintelligence.dto.decision.DecisionRequestDto;
@@ -34,7 +33,7 @@ public class DecisionMapper {
         boardState.setCards(request.boardCards() == null ? List.of() : request.boardCards());
 
         DecisionInput decisionInput = new DecisionInput();
-        decisionInput.setGameType(GameType.CASH);
+        decisionInput.setGameType(request.gameType());
         decisionInput.setHeroPosition(request.heroPosition());
         decisionInput.setVillainPosition(request.villainPosition());
         decisionInput.setStreet(request.street());

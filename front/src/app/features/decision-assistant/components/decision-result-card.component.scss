@@ -1,15 +1,3 @@
-.card {
-  border: 1px solid #d0d0d0;
-  padding: 12px;
-  border-radius: 8px;
-  max-width: 420px;
-}
-
-.title {
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
 .row,
 .stacked {
   display: flex;
@@ -21,4 +9,14 @@
 .stacked {
   align-items: start;
   flex-direction: column;
+}
+
+.content {
+  display: grid;
+  gap: 8px;
+}
+
+.candidates {
+  margin: 0;
+  padding-left: 18px;
 }

@@ -24,6 +24,7 @@ public record VillainRangeDetailDto(
         boolean enabled,
         Integer priority,
         String notes,
+        List<VillainRangeScopeDto> scopes,
         List<VillainRangeCellDto> cells,
         Instant createdAt,
         Instant updatedAt

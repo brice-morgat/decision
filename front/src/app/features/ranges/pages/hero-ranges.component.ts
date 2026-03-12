@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
 import { EMPTY, catchError, switchMap } from 'rxjs';
 import {
@@ -10,14 +11,27 @@ import {
 } from '../../../core/models/range.models';
 import {
   GAME_TYPE_OPTIONS,
+  PlayerPosition,
   PLAYER_POSITION_OPTIONS,
+  ScenarioType,
   SCENARIO_TYPE_OPTIONS,
-  STREET_OPTIONS
+  STRATEGY_LEGEND_OPTIONS,
+  Street,
+  STREET_OPTIONS,
+  StrategyLegend
 } from '../../../core/models/referentials';
 import { StrategicProfileSummary } from '../../../core/models/profile.models';
 import { ProfilesService } from '../../../core/services/profiles.service';
 import { RangesService } from '../../../core/services/ranges.service';
 import { HandSelectionEvent } from '../components/poker-hand-matrix.component';
+
+interface HeroQuickSpot {
+  code: string;
+  label: string;
+  heroPosition: PlayerPosition;
+  scenarioType: ScenarioType;
+  street: Street;
+}
 
 @Component({
   selector: 'app-hero-ranges',
@@ -29,6 +43,34 @@ export class HeroRangesComponent implements OnInit {
   readonly positions = PLAYER_POSITION_OPTIONS;
   readonly streets = STREET_OPTIONS;
   readonly scenarioTypes = SCENARIO_TYPE_OPTIONS;
+  readonly legendOptions = STRATEGY_LEGEND_OPTIONS;
+  readonly quickSpots: HeroQuickSpot[] = [
+    { code: 'BTN_OPEN_FIRST_IN', label: 'BTN open first in', heroPosition: PlayerPosition.BTN, scenarioType: ScenarioType.OPEN_FIRST_IN, street: Street.PREFLOP },
+    { code: 'CO_OPEN_FIRST_IN', label: 'CO open first in', heroPosition: PlayerPosition.CO, scenarioType: ScenarioType.OPEN_FIRST_IN, street: Street.PREFLOP },
+    { code: 'SB_VS_BTN_OPEN', label: 'SB vs BTN open', heroPosition: PlayerPosition.SB, scenarioType: ScenarioType.FACING_OPEN, street: Street.PREFLOP },
+    { code: 'BB_VS_BTN_OPEN', label: 'BB vs BTN open', heroPosition: PlayerPosition.BB, scenarioType: ScenarioType.FACING_OPEN, street: Street.PREFLOP },
+    { code: 'BB_VS_CO_OPEN', label: 'BB vs CO open', heroPosition: PlayerPosition.BB, scenarioType: ScenarioType.FACING_OPEN, street: Street.PREFLOP },
+    { code: 'BTN_VS_3BET', label: 'BTN vs 3bet', heroPosition: PlayerPosition.BTN, scenarioType: ScenarioType.FACING_THREE_BET, street: Street.PREFLOP }
+  ];
+  private readonly legendColors: Record<StrategyLegend, string> = {
+    [StrategyLegend.OPEN]: '#4f7db8',
+    [StrategyLegend.CALL]: '#3e8b46',
+    [StrategyLegend.CALL_ONLY]: '#2e7d32',
+    [StrategyLegend.THREE_BET]: '#8a63a8',
+    [StrategyLegend.FOUR_BET]: '#ee5f5f',
+    [StrategyLegend.SHOVE]: '#a52714',
+    [StrategyLegend.DEFEND]: '#4e8d5e',
+    [StrategyLegend.ISO_RAISE]: '#7b4fa3',
+    [StrategyLegend.FOLD]: '#c9ced6',
+    [StrategyLegend.CHECK]: '#90a4ae',
+    [StrategyLegend.CHECK_CALL]: '#558b2f',
+    [StrategyLegend.CHECK_FOLD]: '#b0bec5',
+    [StrategyLegend.CHECK_RAISE]: '#6a1b9a',
+    [StrategyLegend.BET_25]: '#ffd54f',
+    [StrategyLegend.BET_50]: '#ffb300',
+    [StrategyLegend.BET_75]: '#ff8f00',
+    [StrategyLegend.RAISE]: '#ab47bc'
+  };
 
   readonly filtersForm = this.fb.nonNullable.group({
     profileId: ['', Validators.required],
@@ -55,9 +97,13 @@ export class HeroRangesComponent implements OnInit {
   currentRangeName = 'Nouvelle range hero';
   warningMessage: string | null = null;
   feedbackMessage: string | null = null;
+  selectedQuickSpotCode = 'BTN_OPEN_FIRST_IN';
+  selectedLegendPreset: StrategyLegend = StrategyLegend.OPEN;
+  selectedPaintColor = this.legendColors[StrategyLegend.OPEN];
 
   constructor(
     private readonly fb: FormBuilder,
+    private readonly route: ActivatedRoute,
     private readonly profilesService: ProfilesService,
     private readonly rangesService: RangesService
   ) {}
@@ -70,6 +116,7 @@ export class HeroRangesComponent implements OnInit {
           profileId: profiles[0].id,
           gameType: profiles[0].gameType
         });
+        this.onQuickSpotSelect(this.selectedQuickSpotCode);
         this.loadRangeSummaries(profiles[0].id);
       }
     });
@@ -81,6 +128,60 @@ export class HeroRangesComponent implements OnInit {
         this.rangeSummaries = [];
       }
     });
+
+    this.route.queryParamMap.subscribe((params) => {
+      const rangeId = params.get('rangeId');
+      if (rangeId) {
+        this.openRange(rangeId);
+      }
+    });
+  }
+
+  onProfileQuickSelect(profileId: string): void {
+    const profile = this.profiles.find((item) => item.id === profileId);
+    if (!profile) {
+      return;
+    }
+
+    this.filtersForm.patchValue({
+      profileId: profile.id,
+      gameType: profile.gameType
+    });
+  }
+
+  onQuickSpotSelect(spotCode: string): void {
+    this.selectedQuickSpotCode = spotCode;
+    const spot = this.quickSpots.find((item) => item.code === spotCode);
+    if (!spot) {
+      return;
+    }
+
+    this.filtersForm.patchValue({
+      street: spot.street,
+      heroPosition: spot.heroPosition,
+      scenarioType: spot.scenarioType
+    });
+  }
+
+  onLegendPresetSelect(preset: StrategyLegend): void {
+    this.selectedLegendPreset = preset;
+    this.selectedPaintColor = this.legendColors[preset] ?? this.selectedPaintColor;
+    if (this.selectedHandCodes.length > 0) {
+      this.applyLegendPreset(this.selectedHandCodes, false);
+    }
+  }
+
+  onPaintColorChange(color: string): void {
+    this.selectedPaintColor = color;
+    if (this.selectedHandCodes.length > 0) {
+      this.applyLegendPreset(this.selectedHandCodes, false);
+    }
+  }
+
+  disableSelectedHands(): void {
+    if (this.selectedHandCodes.length > 0) {
+      this.applyLegendPreset(this.selectedHandCodes, true);
+    }
   }
 
   get matrixCells(): PokerHandMatrixCell[] {
@@ -200,12 +301,14 @@ export class HeroRangesComponent implements OnInit {
 
     if (!additive) {
       this.selectedHandCodes = [handCode];
+      this.applyLegendPreset([handCode], false);
       return;
     }
 
     this.selectedHandCodes = this.selectedHandCodes.includes(handCode)
       ? this.selectedHandCodes.filter((code) => code !== handCode)
       : [...this.selectedHandCodes, handCode];
+    this.applyLegendPreset(this.selectedHandCodes, false);
   }
 
   clearSelection(): void {
@@ -307,5 +410,26 @@ export class HeroRangesComponent implements OnInit {
       colorCode: '#93c5fd',
       note: null
     };
+  }
+
+  private applyLegendPreset(handCodes: string[], disable: boolean): void {
+    if (handCodes.length === 0) {
+      return;
+    }
+
+    const nextLegend = disable ? null : this.selectedLegendPreset;
+    const nextColor = disable ? '#c9ced6' : this.selectedPaintColor;
+
+    const updatedCells = { ...this.cellsByHandCode };
+    handCodes.forEach((handCode) => {
+      updatedCells[handCode] = {
+        ...this.buildCell(handCode),
+        handCode,
+        enabled: !disable,
+        legendCode: nextLegend,
+        colorCode: nextColor
+      };
+    });
+    this.cellsByHandCode = updatedCells;
   }
 }

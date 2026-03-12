@@ -1,7 +1,12 @@
 <h2>Detail review</h2>
 <div *ngIf="review$ | async as review">
-  <div><strong>{{ review.label }}</strong> ({{ review.status }})</div>
-  <div>Expected: {{ review.expectedAction }}</div>
-  <div>Actual: {{ review.actualAction }}</div>
-  <p>{{ review.notes }}</p>
+  <div><strong>{{ review.strategyProfileName }}</strong> ({{ (review.decisionStatus || 'N/A') | readableCode }})</div>
+  <div>Main hero: {{ review.heroHandCode || 'N/A' }}</div>
+  <div>Board: {{ review.boardCards || '-' }}</div>
+  <div>Action recommandee: {{ (review.recommendedAction || 'N/A') | readableCode }}</div>
+  <div>Action jouee: {{ (review.actualAction || 'N/A') | readableCode }}</div>
+  <div>Resultat: {{ review.netResultInBigBlinds ?? 0 }}bb ({{ (review.issue || 'N/A') | readableCode }})</div>
+  <p>{{ review.engineExplanation || '' }}</p>
+  <p>{{ review.situationSummary || '' }}</p>
+  <p>{{ review.reviewNote || '' }}</p>
 </div>

@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
 import { EMPTY, catchError, switchMap } from 'rxjs';
 import {
   PokerHandMatrixCell,
+  VillainRangeScope,
   VillainRangeCellDto,
   VillainRangeDetail,
   VillainRangeSummary,
@@ -14,13 +16,30 @@ import {
   GAME_TYPE_OPTIONS,
   PlayerPosition,
   PLAYER_POSITION_OPTIONS,
+  ScenarioType,
   SCENARIO_TYPE_OPTIONS,
+  Street,
   STREET_OPTIONS
 } from '../../../core/models/referentials';
 import { StrategicProfileSummary } from '../../../core/models/profile.models';
 import { ProfilesService } from '../../../core/services/profiles.service';
 import { RangesService } from '../../../core/services/ranges.service';
 import { HandSelectionEvent } from '../components/poker-hand-matrix.component';
+import { buildHandMatrixCodes } from '../utils/poker-hand-codes';
+
+type VillainEditionMode = 'STANDARD' | 'ADVANCED';
+type VillainPreset = 'TIGHT' | 'STANDARD' | 'LOOSE';
+type VillainTagPreset = 'VALUE' | 'CALL' | 'BLUFF' | 'DISABLE';
+
+interface VillainQuickSpot {
+  code: string;
+  label: string;
+  villainPosition: PlayerPosition;
+  heroPosition: PlayerPosition | null;
+  scenarioType: ScenarioType;
+  street: Street;
+  triggerActionCode: ActionType | null;
+}
 
 @Component({
   selector: 'app-villain-ranges',
@@ -28,11 +47,59 @@ import { HandSelectionEvent } from '../components/poker-hand-matrix.component';
   styleUrls: ['./villain-ranges.component.scss']
 })
 export class VillainRangesComponent implements OnInit {
+  private static readonly HAND_CODES = buildHandMatrixCodes().flat();
+
   readonly gameTypes = GAME_TYPE_OPTIONS;
   readonly positions = PLAYER_POSITION_OPTIONS;
   readonly streets = STREET_OPTIONS;
   readonly scenarioTypes = SCENARIO_TYPE_OPTIONS;
   readonly actionTypes = ACTION_TYPE_OPTIONS;
+  readonly villainEditionModes: VillainEditionMode[] = ['STANDARD', 'ADVANCED'];
+  readonly villainPresets: VillainPreset[] = ['TIGHT', 'STANDARD', 'LOOSE'];
+  readonly quickSpots: VillainQuickSpot[] = [
+    {
+      code: 'BB_VS_BTN_OPEN',
+      label: 'BB vs BTN open',
+      villainPosition: PlayerPosition.BTN,
+      heroPosition: PlayerPosition.BB,
+      scenarioType: ScenarioType.FACING_OPEN,
+      street: Street.PREFLOP,
+      triggerActionCode: ActionType.OPEN
+    },
+    {
+      code: 'BB_VS_CO_OPEN',
+      label: 'BB vs CO open',
+      villainPosition: PlayerPosition.CO,
+      heroPosition: PlayerPosition.BB,
+      scenarioType: ScenarioType.FACING_OPEN,
+      street: Street.PREFLOP,
+      triggerActionCode: ActionType.OPEN
+    },
+    {
+      code: 'SB_VS_BTN_OPEN',
+      label: 'SB vs BTN open',
+      villainPosition: PlayerPosition.BTN,
+      heroPosition: PlayerPosition.SB,
+      scenarioType: ScenarioType.FACING_OPEN,
+      street: Street.PREFLOP,
+      triggerActionCode: ActionType.OPEN
+    },
+    {
+      code: 'BTN_OPEN_FIRST_IN',
+      label: 'BTN open first in',
+      villainPosition: PlayerPosition.BB,
+      heroPosition: PlayerPosition.BTN,
+      scenarioType: ScenarioType.OPEN_FIRST_IN,
+      street: Street.PREFLOP,
+      triggerActionCode: ActionType.CHECK
+    }
+  ];
+  readonly tagPresets: Array<{ code: VillainTagPreset; label: string; color: string; weight: number }> = [
+    { code: 'VALUE', label: 'Value', color: '#4f7db8', weight: 100 },
+    { code: 'CALL', label: 'Call', color: '#3e8b46', weight: 70 },
+    { code: 'BLUFF', label: 'Bluff', color: '#8a63a8', weight: 35 },
+    { code: 'DISABLE', label: 'Fold', color: '#c9ced6', weight: 0 }
+  ];
 
   readonly filtersForm = this.fb.nonNullable.group({
     profileId: ['', Validators.required],
@@ -53,6 +120,16 @@ export class VillainRangesComponent implements OnInit {
     notes: ['', Validators.maxLength(2000)]
   });
 
+  readonly standardForm = this.fb.nonNullable.group({
+    mode: ['STANDARD' as VillainEditionMode, Validators.required],
+    preset: ['STANDARD' as VillainPreset, Validators.required],
+    rangeWidthPercent: [40, [Validators.min(5), Validators.max(90)]],
+    aggressionPercent: [50, [Validators.min(0), Validators.max(100)]],
+    applyHeroPositions: [[] as PlayerPosition[]],
+    applyVillainPositions: [[PLAYER_POSITION_OPTIONS[0]] as PlayerPosition[]],
+    applyTriggerActions: [[] as ActionType[]]
+  });
+
   profiles: StrategicProfileSummary[] = [];
   rangeSummaries: VillainRangeSummary[] = [];
   cellsByHandCode: Record<string, VillainRangeCellDto> = {};
@@ -60,9 +137,12 @@ export class VillainRangesComponent implements OnInit {
   currentRangeId: string | null = null;
   currentRangeName = 'Nouvelle range vilain';
   feedbackMessage: string | null = null;
+  selectedQuickSpotCode = 'BB_VS_BTN_OPEN';
+  selectedTagPreset: VillainTagPreset = 'VALUE';
 
   constructor(
     private readonly fb: FormBuilder,
+    private readonly route: ActivatedRoute,
     private readonly profilesService: ProfilesService,
     private readonly rangesService: RangesService
   ) {}
@@ -75,6 +155,7 @@ export class VillainRangesComponent implements OnInit {
           profileId: profiles[0].id,
           gameType: profiles[0].gameType
         });
+        this.onQuickSpotSelect(this.selectedQuickSpotCode);
         this.loadRangeSummaries(profiles[0].id);
       }
     });
@@ -86,6 +167,13 @@ export class VillainRangesComponent implements OnInit {
         this.rangeSummaries = [];
       }
     });
+
+    this.route.queryParamMap.subscribe((params) => {
+      const rangeId = params.get('rangeId');
+      if (rangeId) {
+        this.openRange(rangeId);
+      }
+    });
   }
 
   get matrixCells(): PokerHandMatrixCell[] {
@@ -94,7 +182,8 @@ export class VillainRangesComponent implements OnInit {
       enabled: cell.enabled,
       badge: cell.tagCode,
       note: cell.note,
-      weight: cell.weight
+      weight: cell.weight,
+      accentColor: this.resolveTagColor(cell.tagCode)
     }));
   }
 
@@ -104,6 +193,71 @@ export class VillainRangesComponent implements OnInit {
 
   get selectionCount(): number {
     return this.selectedHandCodes.length;
+  }
+
+  get activeCellsCount(): number {
+    return this.getPersistedCells().length;
+  }
+
+  get isAdvancedMode(): boolean {
+    return this.standardForm.controls.mode.value === 'ADVANCED';
+  }
+
+  onProfileQuickSelect(profileId: string): void {
+    const profile = this.profiles.find((item) => item.id === profileId);
+    if (!profile) {
+      return;
+    }
+
+    this.filtersForm.patchValue({
+      profileId: profile.id,
+      gameType: profile.gameType
+    });
+  }
+
+  onQuickSpotSelect(spotCode: string): void {
+    this.selectedQuickSpotCode = spotCode;
+    const spot = this.quickSpots.find((item) => item.code === spotCode);
+    if (!spot) {
+      return;
+    }
+
+    this.filtersForm.patchValue({
+      street: spot.street,
+      villainPosition: spot.villainPosition,
+      heroPosition: spot.heroPosition ?? '',
+      scenarioType: spot.scenarioType,
+      triggerActionCode: spot.triggerActionCode ?? ''
+    });
+  }
+
+  onTagPresetSelect(preset: VillainTagPreset): void {
+    this.selectedTagPreset = preset;
+    if (this.selectedHandCodes.length > 0) {
+      this.applyTagPreset(this.selectedHandCodes);
+    }
+  }
+
+  onEditionMode(mode: VillainEditionMode): void {
+    this.standardForm.controls.mode.setValue(mode);
+  }
+
+  toggleVillainPosition(position: PlayerPosition): void {
+    const current = this.standardForm.controls.applyVillainPositions.value;
+    const next = current.includes(position) ? current.filter((item) => item !== position) : [...current, position];
+    this.standardForm.controls.applyVillainPositions.setValue(next);
+  }
+
+  toggleHeroPosition(position: PlayerPosition): void {
+    const current = this.standardForm.controls.applyHeroPositions.value;
+    const next = current.includes(position) ? current.filter((item) => item !== position) : [...current, position];
+    this.standardForm.controls.applyHeroPositions.setValue(next);
+  }
+
+  toggleTriggerAction(action: ActionType): void {
+    const current = this.standardForm.controls.applyTriggerActions.value;
+    const next = current.includes(action) ? current.filter((item) => item !== action) : [...current, action];
+    this.standardForm.controls.applyTriggerActions.setValue(next);
   }
 
   loadRangeSummaries(profileId: string): void {
@@ -146,6 +300,43 @@ export class VillainRangesComponent implements OnInit {
     this.feedbackMessage = 'Nouvelle range vilain prete a etre enregistree.';
   }
 
+  applyStandardPreset(): void {
+    const preset = this.standardForm.controls.preset.value;
+    const baseWidth = preset === 'TIGHT' ? 25 : preset === 'LOOSE' ? 55 : 40;
+    const baseAggression = preset === 'TIGHT' ? 65 : preset === 'LOOSE' ? 40 : 50;
+
+    const rangeWidth = this.standardForm.controls.rangeWidthPercent.value;
+    const aggression = this.standardForm.controls.aggressionPercent.value;
+    const effectiveWidth = Math.round((baseWidth + rangeWidth) / 2);
+    const effectiveAggression = Math.round((baseAggression + aggression) / 2);
+
+    const minScore = 100 - effectiveWidth;
+    const raiseThreshold = 60 + Math.round((effectiveAggression - 50) / 2);
+    const callThreshold = minScore;
+
+    const generatedCells: Record<string, VillainRangeCellDto> = {};
+    VillainRangesComponent.HAND_CODES.forEach((handCode) => {
+      const score = this.scoreHandCode(handCode);
+      const enabled = score >= minScore;
+
+      if (!enabled) {
+        return;
+      }
+
+      generatedCells[handCode] = {
+        handCode,
+        enabled: true,
+        weight: Math.max(10, Math.min(100, 20 + score)),
+        tagCode: score >= raiseThreshold ? 'VALUE' : score >= callThreshold ? 'CALL' : 'BLUFF',
+        note: null
+      };
+    });
+
+    this.cellsByHandCode = generatedCells;
+    this.selectedHandCodes = Object.keys(generatedCells).slice(0, 1);
+    this.feedbackMessage = `Mode standard applique (${preset.toLowerCase()}) - ${Object.keys(generatedCells).length} mains activees.`;
+  }
+
   saveRange(): void {
     if (this.filtersForm.invalid || this.metadataForm.invalid) {
       this.filtersForm.markAllAsTouched();
@@ -159,15 +350,20 @@ export class VillainRangesComponent implements OnInit {
       heroPosition: this.getOptionalHeroPosition(),
       triggerActionCode: this.getOptionalTriggerActionCode(),
       lineSignature: this.filtersForm.controls.lineSignature.value || null,
-      notes: this.metadataForm.controls.notes.value || null
+      notes: this.metadataForm.controls.notes.value || null,
+      scopes: this.isAdvancedMode ? [] : this.buildStandardScopes()
     };
 
     const cellsPayload = { cells: this.getPersistedCells() };
-    const save$ = this.currentRangeId
+    const save$ = this.isAdvancedMode
+      ? (this.currentRangeId
       ? this.rangesService.updateVillain(this.currentRangeId, payload).pipe(
           switchMap((range) => this.rangesService.updateVillainCells(range.id, cellsPayload))
         )
       : this.rangesService.createVillain(payload).pipe(
+          switchMap((range) => this.rangesService.updateVillainCells(range.id, cellsPayload))
+        ))
+      : this.rangesService.bulkVillain(payload).pipe(
           switchMap((range) => this.rangesService.updateVillainCells(range.id, cellsPayload))
         );
 
@@ -204,12 +400,14 @@ export class VillainRangesComponent implements OnInit {
 
     if (!additive) {
       this.selectedHandCodes = [handCode];
+      this.applyTagPreset([handCode]);
       return;
     }
 
     this.selectedHandCodes = this.selectedHandCodes.includes(handCode)
       ? this.selectedHandCodes.filter((code) => code !== handCode)
       : [...this.selectedHandCodes, handCode];
+    this.applyTagPreset(this.selectedHandCodes);
   }
 
   clearSelection(): void {
@@ -283,6 +481,15 @@ export class VillainRangesComponent implements OnInit {
     });
     this.cellsByHandCode = {};
     this.selectedHandCodes = [];
+    this.standardForm.patchValue({
+      mode: 'STANDARD',
+      preset: 'STANDARD',
+      rangeWidthPercent: 40,
+      aggressionPercent: 50,
+      applyHeroPositions: [],
+      applyVillainPositions: [this.filtersForm.controls.villainPosition.value],
+      applyTriggerActions: []
+    });
   }
 
   private suggestRangeName(): string {
@@ -314,5 +521,85 @@ export class VillainRangesComponent implements OnInit {
       tagCode: null,
       note: null
     };
+  }
+
+  private buildStandardScopes(): VillainRangeScope[] {
+    const heroPositions = this.standardForm.controls.applyHeroPositions.value;
+    const villainPositions = this.standardForm.controls.applyVillainPositions.value;
+    const triggerActions = this.standardForm.controls.applyTriggerActions.value;
+    const lineSignature = this.filtersForm.controls.lineSignature.value || null;
+
+    const resolvedVillainPositions = villainPositions.length > 0
+      ? villainPositions
+      : [this.filtersForm.controls.villainPosition.value];
+    const heroCandidates = heroPositions.length > 0 ? heroPositions : [null];
+    const triggerCandidates = triggerActions.length > 0 ? triggerActions : [null];
+
+    const scopes: VillainRangeScope[] = [];
+    resolvedVillainPositions.forEach((villainPosition) => {
+      heroCandidates.forEach((heroPosition) => {
+        triggerCandidates.forEach((triggerAction) => {
+          scopes.push({
+            heroPosition,
+            villainPosition,
+            triggerActionCode: triggerAction,
+            lineSignature,
+            scopeWeight: 0
+          });
+        });
+      });
+    });
+
+    return scopes;
+  }
+
+  private scoreHandCode(handCode: string): number {
+    const rankWeights: Record<string, number> = {
+      A: 13, K: 12, Q: 11, J: 10, T: 9,
+      '9': 8, '8': 7, '7': 6, '6': 5, '5': 4, '4': 3, '3': 2, '2': 1
+    };
+
+    if (handCode.length === 2) {
+      return Math.min(100, (rankWeights[handCode[0]] ?? 0) * 6 + 20);
+    }
+
+    const firstRank = handCode[0];
+    const secondRank = handCode[1];
+    const suited = handCode.endsWith('S');
+    const base = (rankWeights[firstRank] ?? 0) * 3 + (rankWeights[secondRank] ?? 0) * 2;
+    const suitedBonus = suited ? 12 : 0;
+    const connectorBonus = Math.abs((rankWeights[firstRank] ?? 0) - (rankWeights[secondRank] ?? 0)) === 1 ? 8 : 0;
+    return Math.min(100, base + suitedBonus + connectorBonus);
+  }
+
+  private applyTagPreset(handCodes: string[]): void {
+    if (handCodes.length === 0) {
+      return;
+    }
+
+    const preset = this.tagPresets.find((item) => item.code === this.selectedTagPreset);
+    if (!preset) {
+      return;
+    }
+
+    const isDisable = preset.code === 'DISABLE';
+    const updatedCells = { ...this.cellsByHandCode };
+    handCodes.forEach((handCode) => {
+      updatedCells[handCode] = {
+        ...this.buildCell(handCode),
+        handCode,
+        enabled: !isDisable,
+        tagCode: isDisable ? null : preset.code,
+        weight: isDisable ? null : preset.weight
+      };
+    });
+    this.cellsByHandCode = updatedCells;
+  }
+
+  private resolveTagColor(tagCode: string | null | undefined): string {
+    if (!tagCode) {
+      return '#eadccf';
+    }
+    return this.tagPresets.find((item) => item.code === tagCode)?.color ?? '#eadccf';
   }
 }

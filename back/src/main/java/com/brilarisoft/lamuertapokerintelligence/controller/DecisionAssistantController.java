@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Validated
 @RestController
-@RequestMapping("/decision-assistant")
+@RequestMapping("/decision")
 public class DecisionAssistantController {
 
     private final DecisionEngineService decisionEngineService;
@@ -21,7 +21,7 @@ public class DecisionAssistantController {
         this.decisionEngineService = decisionEngineService;
     }
 
-    @PostMapping("/decide")
+    @PostMapping
     public DecisionResponseDto decide(@Valid @RequestBody DecisionRequestDto request) {
         return decisionEngineService.decide(request);
     }

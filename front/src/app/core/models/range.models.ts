@@ -61,6 +61,14 @@ export interface VillainRangeContext {
   lineSignature?: string | null;
 }
 
+export interface VillainRangeScope {
+  heroPosition?: PlayerPosition | null;
+  villainPosition?: PlayerPosition | null;
+  triggerActionCode?: ActionType | null;
+  lineSignature?: string | null;
+  scopeWeight?: number | null;
+}
+
 export interface VillainRangeCellDto {
   handCode: string;
   enabled: boolean;
@@ -88,6 +96,7 @@ export interface VillainRangeSummary {
 
 export interface VillainRangeDetail extends VillainRangeSummary {
   notes?: string | null;
+  scopes?: VillainRangeScope[];
   cells: VillainRangeCellDto[];
   createdAt: string;
 }
@@ -98,6 +107,7 @@ export interface VillainRangeUpsertPayload extends VillainRangeContext {
   enabled: boolean;
   priority: number;
   notes?: string | null;
+  scopes?: VillainRangeScope[];
 }
 
 export interface VillainRangeCellsUpdatePayload {

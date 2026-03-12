@@ -6,8 +6,10 @@ import java.util.List;
 public record ApiErrorResponse(
         Instant timestamp,
         int status,
-        String error,
+        String code,
         String message,
-        List<String> details
+        String path,
+        String method,
+        List<ApiErrorDetail> details
 ) {
 }

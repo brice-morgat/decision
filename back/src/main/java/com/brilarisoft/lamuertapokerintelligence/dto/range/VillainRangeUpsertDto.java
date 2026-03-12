@@ -8,6 +8,8 @@ import com.brilarisoft.lamuertapokerintelligence.domain.referential.Street;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 
 public record VillainRangeUpsertDto(
@@ -23,6 +25,7 @@ public record VillainRangeUpsertDto(
         @Size(max = 128) String lineSignature,
         boolean enabled,
         @NotNull Integer priority,
-        @Size(max = 2000) String notes
+        @Size(max = 2000) String notes,
+        @Valid List<VillainRangeScopeDto> scopes
 ) {
 }

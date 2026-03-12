@@ -1,5 +1,7 @@
 import {
   ActionType,
+  ActorType,
+  GameType,
   DecisionStatus,
   PlayerPosition,
   ScenarioType,
@@ -9,7 +11,7 @@ import {
 
 export interface ActionEvent {
   orderIndex: number;
-  actorType: 'HERO' | 'VILLAIN';
+  actorType: ActorType;
   actorPosition?: PlayerPosition | null;
   street: Street;
   actionCode: ActionType;
@@ -24,6 +26,9 @@ export interface ActionEvent {
 
 export interface DecisionRequest {
   strategyProfileId: string;
+  villainRangeSetId?: string | null;
+  villainRangePercent?: number | null;
+  gameType: GameType;
   heroPosition: PlayerPosition;
   villainPosition: PlayerPosition;
   street: Street;
@@ -40,8 +45,6 @@ export interface MatchedRuleCandidate {
   ruleName: string;
   priority: number;
   matchedConditionCount: number;
-  structuralSpecificity: number;
-  chosen: boolean;
 }
 
 export interface DecisionResult {
@@ -51,7 +54,7 @@ export interface DecisionResult {
   matchedRuleId?: string | null;
   matchedRuleName?: string | null;
   explanation: string;
-  trace: string[];
-  warnings: string[];
-  matchedCandidates: MatchedRuleCandidate[];
+  trace?: string[] | null;
+  warnings?: string[] | null;
+  matchedCandidates?: MatchedRuleCandidate[] | null;
 }

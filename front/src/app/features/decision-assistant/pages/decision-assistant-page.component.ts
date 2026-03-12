@@ -14,6 +14,8 @@ import { DecisionAssistantFacade } from '../services/decision-assistant.facade';
 })
 export class DecisionAssistantPageComponent {
   readonly result$ = this.facade.result$;
+  readonly loading$ = this.facade.loading$;
+  readonly error$ = this.facade.error$;
 
   constructor(private readonly facade: DecisionAssistantFacade) {}
 

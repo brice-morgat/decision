@@ -1,59 +1,195 @@
-<form [formGroup]="form" (ngSubmit)="submit()" class="form" *ngIf="profiles$ | async as profiles">
-  <label>
-    Profil
-    <select formControlName="strategyProfileId">
-      <option value="" disabled>Selectionner</option>
-      <option *ngFor="let profile of profiles" [value]="profile.id">{{ profile.name }}</option>
-    </select>
-  </label>
+<section class="play" *ngIf="profiles$ | async as profiles">
+  <div class="play-top">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Profil</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="buttons-wrap">
+        <button
+          mat-stroked-button
+          type="button"
+          *ngFor="let profile of profiles"
+          [class.active-choice]="(selectedProfileId || profiles[0].id) === profile.id"
+          (click)="onProfileChange(profile.id)">
+          {{ profile.name }}
+        </button>
+      </mat-card-content>
+    </mat-card>
 
-  <label>
-    Position hero
-    <select formControlName="heroPosition">
-      <option *ngFor="let pos of positions" [value]="pos">{{ pos | readableCode }}</option>
-    </select>
-  </label>
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Spot</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="buttons-wrap">
+        <button
+          mat-stroked-button
+          type="button"
+          *ngFor="let spot of spotOptions; trackBy: trackBySpot"
+          [class.active-choice]="selectedSpotCode === spot.code"
+          (click)="onSpotChange(spot.code)">
+          {{ spot.label }}
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
 
-  <label>
-    Position vilain
-    <select formControlName="villainPosition">
-      <option *ngFor="let pos of positions" [value]="pos">{{ pos | readableCode }}</option>
-    </select>
-  </label>
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Main hero</mat-card-title>
+      <mat-card-subtitle>{{ displayHandCode(selectedHandCode) }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="matrix">
+        <div class="matrix-row" *ngFor="let row of handMatrix">
+          <button
+            mat-stroked-button
+            type="button"
+            class="matrix-cell"
+            *ngFor="let handCode of row"
+            [class.matrix-cell--active]="selectedHandCode === handCode"
+            (click)="onSelectHandCode(handCode)">
+            {{ displayHandCode(handCode) }}
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
 
-  <label>
-    Scenario
-    <select formControlName="scenarioType">
-      <option *ngFor="let scenario of scenarioTypes" [value]="scenario">{{ scenario | readableCode }}</option>
-    </select>
-  </label>
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Action adverse</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="buttons-wrap">
+      <button
+        mat-stroked-button
+        type="button"
+        *ngFor="let action of actionTypes"
+        [class.active-choice]="selectedFacingAction === action"
+        (click)="onSelectFacingAction(action)">
+        {{ action | readableCode }}
+      </button>
+    </mat-card-content>
+  </mat-card>
 
-  <label>
-    Street
-    <select formControlName="street">
-      <option *ngFor="let street of streets" [value]="street">{{ street | readableCode }}</option>
-    </select>
-  </label>
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Sizing</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="buttons-wrap">
+      <button
+        mat-stroked-button
+        type="button"
+        *ngFor="let sizingType of sizingTypes"
+        [class.active-choice]="selectedSizingType === sizingType"
+        (click)="onSelectSizingType(sizingType)">
+        {{ sizingType | readableCode }}
+      </button>
 
-  <label>
-    Stack effectif (bb)
-    <input type="number" formControlName="effectiveStackInBigBlinds" />
-  </label>
+      <mat-form-field appearance="outline" class="sizing-input" *ngIf="selectedSizingType !== 'ALL_IN'">
+        <mat-label>Valeur</mat-label>
+        <input matInput type="number" [(ngModel)]="selectedSizingValue" [ngModelOptions]="{ standalone: true }" />
+      </mat-form-field>
+    </mat-card-content>
+  </mat-card>
 
-  <label>
-    Pot (bb)
-    <input type="number" formControlName="potSizeInBigBlinds" />
-  </label>
+  <mat-expansion-panel [(expanded)]="showAdvanced">
+    <mat-expansion-panel-header>
+      <mat-panel-title>Contexte avance</mat-panel-title>
+    </mat-expansion-panel-header>
 
-  <label>
-    Main hero
-    <input type="text" formControlName="heroCards" placeholder="As,Kh" />
-  </label>
+    <div class="advanced-grid">
+      <div class="full-width">
+        <p>Range vilain optionnelle</p>
+        <div class="buttons-wrap">
+          <button
+            mat-stroked-button
+            type="button"
+            [class.active-choice]="!useVillainAdvancedInput"
+            (click)="useVillainAdvancedInput = false">
+            Auto
+          </button>
+          <button
+            mat-stroked-button
+            type="button"
+            [class.active-choice]="useVillainAdvancedInput"
+            (click)="useVillainAdvancedInput = true">
+            Personnaliser
+          </button>
+        </div>
 
-  <label>
-    Board (comma-separated)
-    <input type="text" formControlName="boardCards" placeholder="Ah,Kd,7s" />
-  </label>
+        <ng-container *ngIf="useVillainAdvancedInput">
+          <div class="buttons-wrap">
+            <button
+              mat-stroked-button
+              type="button"
+              [class.active-choice]="villainInputMode === 'CUSTOM'"
+              (click)="onVillainInputModeChange('CUSTOM')">
+              Range personnalisee
+            </button>
+            <button
+              mat-stroked-button
+              type="button"
+              [class.active-choice]="villainInputMode === 'PERCENT'"
+              (click)="onVillainInputModeChange('PERCENT')">
+              Slider %
+            </button>
+          </div>
 
-  <button type="submit">Evaluer</button>
-</form>
+          <div class="buttons-wrap" *ngIf="villainInputMode === 'CUSTOM'">
+            <button
+              mat-stroked-button
+              type="button"
+              *ngFor="let range of villainRanges"
+              [class.active-choice]="selectedVillainRangeSetId === range.id"
+              (click)="onVillainRangeChange(range.id)">
+              {{ range.name }}
+            </button>
+          </div>
+
+          <div class="villain-slider" *ngIf="villainInputMode === 'PERCENT'">
+            <label for="villain-range-percent">Pourcentage de range vilain: {{ villainRangePercent }}%</label>
+            <input
+              id="villain-range-percent"
+              type="range"
+              min="5"
+              max="100"
+              step="1"
+              [(ngModel)]="villainRangePercent"
+              [ngModelOptions]="{ standalone: true }" />
+          </div>
+        </ng-container>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Stack effectif (bb)</mat-label>
+        <input matInput type="number" [(ngModel)]="effectiveStackInBigBlinds" [ngModelOptions]="{ standalone: true }" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Pot actuel (bb)</mat-label>
+        <input matInput type="number" [(ngModel)]="potSizeInBigBlinds" [ngModelOptions]="{ standalone: true }" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Board</mat-label>
+        <input matInput type="text" [(ngModel)]="boardCards" [ngModelOptions]="{ standalone: true }" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Sequence actions</mat-label>
+        <textarea matInput rows="4" [(ngModel)]="actionSequence" [ngModelOptions]="{ standalone: true }"></textarea>
+      </mat-form-field>
+    </div>
+  </mat-expansion-panel>
+
+  <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <button
+    mat-raised-button
+    color="primary"
+    type="button"
+    (click)="submit(profiles)"
+    [disabled]="profiles.length === 0 || !selectedHandCode || submitting">
+    {{ submitting ? 'Calcul en cours...' : 'Calculer la decision' }}
+  </button>
+</section>

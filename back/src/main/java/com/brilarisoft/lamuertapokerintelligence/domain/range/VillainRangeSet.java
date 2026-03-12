@@ -77,6 +77,9 @@ public class VillainRangeSet extends BaseEntity {
     @OneToMany(mappedBy = "villainRangeSet", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VillainRangeCell> cells = new ArrayList<>();
 
+    @OneToMany(mappedBy = "villainRangeSet", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<VillainRangeScope> scopes = new ArrayList<>();
+
     public StrategyProfile getStrategyProfile() {
         return strategyProfile;
     }
@@ -187,5 +190,13 @@ public class VillainRangeSet extends BaseEntity {
 
     public void setCells(List<VillainRangeCell> cells) {
         this.cells = cells;
+    }
+
+    public List<VillainRangeScope> getScopes() {
+        return scopes;
+    }
+
+    public void setScopes(List<VillainRangeScope> scopes) {
+        this.scopes = scopes;
     }
 }

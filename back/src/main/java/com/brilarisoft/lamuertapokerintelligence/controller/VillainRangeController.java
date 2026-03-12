@@ -12,6 +12,7 @@ import com.brilarisoft.lamuertapokerintelligence.dto.range.VillainRangeSummaryDt
 import com.brilarisoft.lamuertapokerintelligence.dto.range.VillainRangeUpsertDto;
 import com.brilarisoft.lamuertapokerintelligence.service.VillainRangeService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -39,7 +40,7 @@ public class VillainRangeController {
     }
 
     @GetMapping
-    public List<VillainRangeSummaryDto> listByProfile(@RequestParam UUID profileId) {
+    public List<VillainRangeSummaryDto> listByProfile(@RequestParam @NotNull UUID profileId) {
         return villainRangeService.listByProfile(profileId);
     }
 
@@ -50,7 +51,7 @@ public class VillainRangeController {
 
     @GetMapping("/context")
     public VillainRangeDetailDto getByContext(
-            @RequestParam UUID profileId,
+            @RequestParam @NotNull UUID profileId,
             @RequestParam GameType gameType,
             @RequestParam Street street,
             @RequestParam Position villainPosition,
@@ -75,6 +76,12 @@ public class VillainRangeController {
     @ResponseStatus(HttpStatus.CREATED)
     public VillainRangeDetailDto createRange(@Valid @RequestBody VillainRangeUpsertDto request) {
         return villainRangeService.createRange(request);
+    }
+
+    @PostMapping("/bulk")
+    @ResponseStatus(HttpStatus.CREATED)
+    public VillainRangeDetailDto bulkUpsert(@Valid @RequestBody VillainRangeUpsertDto request) {
+        return villainRangeService.bulkUpsert(request);
     }
 
     @PutMapping("/{rangeId}")

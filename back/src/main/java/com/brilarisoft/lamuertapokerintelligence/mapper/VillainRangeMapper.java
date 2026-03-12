@@ -2,11 +2,14 @@ package com.brilarisoft.lamuertapokerintelligence.mapper;
 
 import com.brilarisoft.lamuertapokerintelligence.domain.range.PokerHandCodeCatalog;
 import com.brilarisoft.lamuertapokerintelligence.domain.range.VillainRangeCell;
+import com.brilarisoft.lamuertapokerintelligence.domain.range.VillainRangeScope;
 import com.brilarisoft.lamuertapokerintelligence.domain.range.VillainRangeSet;
 import com.brilarisoft.lamuertapokerintelligence.dto.range.VillainRangeCellDto;
 import com.brilarisoft.lamuertapokerintelligence.dto.range.VillainRangeDetailDto;
+import com.brilarisoft.lamuertapokerintelligence.dto.range.VillainRangeScopeDto;
 import com.brilarisoft.lamuertapokerintelligence.dto.range.VillainRangeSummaryDto;
 import com.brilarisoft.lamuertapokerintelligence.dto.range.VillainRangeUpsertDto;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
@@ -50,6 +53,7 @@ public class VillainRangeMapper {
                 rangeSet.isEnabled(),
                 rangeSet.getPriority(),
                 rangeSet.getNotes(),
+                toScopeDtos(rangeSet),
                 rangeSet.getCells().stream()
                         .map(this::toCellDto)
                         .sorted((left, right) -> left.handCode().compareTo(right.handCode()))
@@ -72,6 +76,15 @@ public class VillainRangeMapper {
         rangeSet.setEnabled(dto.enabled());
         rangeSet.setPriority(dto.priority());
         rangeSet.setNotes(normalizeNullable(dto.notes()));
+
+        if (dto.scopes() == null) {
+            return;
+        }
+
+        rangeSet.getScopes().clear();
+        rangeSet.getScopes().addAll(dto.scopes().stream()
+                .map(scope -> toScopeEntity(scope, rangeSet))
+                .toList());
     }
 
     public VillainRangeCell toCellEntity(VillainRangeCellDto dto, VillainRangeSet rangeSet) {
@@ -93,6 +106,33 @@ public class VillainRangeMapper {
                 cell.getTagCode(),
                 cell.getNote()
         );
+    }
+
+    private List<VillainRangeScopeDto> toScopeDtos(VillainRangeSet rangeSet) {
+        if (rangeSet.getScopes() == null || rangeSet.getScopes().isEmpty()) {
+            return List.of();
+        }
+
+        return rangeSet.getScopes().stream()
+                .map(scope -> new VillainRangeScopeDto(
+                        scope.getHeroPosition(),
+                        scope.getVillainPosition(),
+                        scope.getTriggerActionType(),
+                        scope.getLineSignature(),
+                        scope.getScopeWeight()
+                ))
+                .toList();
+    }
+
+    private VillainRangeScope toScopeEntity(VillainRangeScopeDto dto, VillainRangeSet rangeSet) {
+        VillainRangeScope scope = new VillainRangeScope();
+        scope.setVillainRangeSet(rangeSet);
+        scope.setHeroPosition(dto.heroPosition());
+        scope.setVillainPosition(dto.villainPosition());
+        scope.setTriggerActionType(dto.triggerActionCode());
+        scope.setLineSignature(normalizeNullable(dto.lineSignature()));
+        scope.setScopeWeight(dto.scopeWeight() == null ? 0 : dto.scopeWeight());
+        return scope;
     }
 
     private String normalizeNullable(String value) {

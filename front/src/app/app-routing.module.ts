@@ -10,6 +10,11 @@ const routes: Routes = [
       )
   },
   {
+    path: 'spots',
+    loadChildren: () =>
+      import('./features/spots/spots.module').then((m) => m.SpotsModule)
+  },
+  {
     path: 'profiles',
     loadChildren: () =>
       import('./features/profiles/profiles.module').then((m) => m.ProfilesModule)

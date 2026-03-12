@@ -12,12 +12,14 @@ import com.brilarisoft.lamuertapokerintelligence.domain.referential.DecisionStat
 import com.brilarisoft.lamuertapokerintelligence.domain.referential.GameType;
 import com.brilarisoft.lamuertapokerintelligence.domain.referential.Position;
 import com.brilarisoft.lamuertapokerintelligence.domain.referential.ScenarioType;
+import com.brilarisoft.lamuertapokerintelligence.domain.referential.StrategyLegend;
 import com.brilarisoft.lamuertapokerintelligence.domain.referential.Street;
 import com.brilarisoft.lamuertapokerintelligence.domain.strategyprofile.StrategyProfile;
 import com.brilarisoft.lamuertapokerintelligence.dto.decision.DecisionRequestDto;
 import com.brilarisoft.lamuertapokerintelligence.mapper.DecisionMapper;
 import com.brilarisoft.lamuertapokerintelligence.repository.DecisionRuleRepository;
 import com.brilarisoft.lamuertapokerintelligence.repository.StrategyProfileRepository;
+import com.brilarisoft.lamuertapokerintelligence.repository.VillainRangeSetRepository;
 import com.brilarisoft.lamuertapokerintelligence.service.StateReconstructionService;
 import com.brilarisoft.lamuertapokerintelligence.service.ruleengine.DecisionAssembler;
 import com.brilarisoft.lamuertapokerintelligence.service.ruleengine.DecisionInputValidator;
@@ -45,6 +47,8 @@ class DecisionEngineServiceImplTest {
     @Mock
     private DecisionRuleRepository decisionRuleRepository;
     @Mock
+    private VillainRangeSetRepository villainRangeSetRepository;
+    @Mock
     private StateReconstructionService stateReconstructionService;
     @Mock
     private HeroRangeResolver heroRangeResolver;
@@ -62,6 +66,7 @@ class DecisionEngineServiceImplTest {
         service = new DecisionEngineServiceImpl(
                 new DecisionMapper(),
                 strategyProfileRepository,
+                villainRangeSetRepository,
                 decisionRuleRepository,
                 new DecisionInputValidator(),
                 stateReconstructionService,
@@ -128,6 +133,49 @@ class DecisionEngineServiceImplTest {
         assertThat(response.recommendedAction()).isEqualTo(ActionType.CALL);
     }
 
+    @Test
+    void returnsRangeFallbackWhenNoRulesButHeroLegendIsAvailable() {
+        DecisionContext context = context();
+        context.setHeroStrategyLegend(StrategyLegend.THREE_BET);
+        HeroRangeSet heroRangeSet = new HeroRangeSet();
+        UUID profileId = UUID.randomUUID();
+
+        when(strategyProfileRepository.findById(profileId)).thenReturn(Optional.of(profile()));
+        when(stateReconstructionService.reconstruct(org.mockito.ArgumentMatchers.any(DecisionInput.class))).thenReturn(context);
+        when(heroRangeResolver.resolve(context)).thenReturn(Optional.of(heroRangeSet));
+        when(villainRangeResolver.resolve(context)).thenReturn(Optional.empty());
+        when(decisionRuleRepository.findByStrategyProfileIdAndStreetAndScenarioTypeAndActiveTrueOrderByPriorityAsc(
+                context.getStrategyProfile().getId(), context.getStreet(), context.getScenarioType()
+        )).thenReturn(List.of());
+
+        var response = service.decide(request(profileId, List.of("As", "Ks")));
+
+        assertThat(response.status()).isEqualTo(DecisionStatus.SUCCESS);
+        assertThat(response.recommendedAction()).isEqualTo(ActionType.THREE_BET);
+        assertThat(response.explanation()).contains("range hero");
+    }
+
+    @Test
+    void returnsFoldWhenNoRulesAndHeroLegendIsFold() {
+        DecisionContext context = context();
+        context.setHeroStrategyLegend(StrategyLegend.FOLD);
+        HeroRangeSet heroRangeSet = new HeroRangeSet();
+        UUID profileId = UUID.randomUUID();
+
+        when(strategyProfileRepository.findById(profileId)).thenReturn(Optional.of(profile()));
+        when(stateReconstructionService.reconstruct(org.mockito.ArgumentMatchers.any(DecisionInput.class))).thenReturn(context);
+        when(heroRangeResolver.resolve(context)).thenReturn(Optional.of(heroRangeSet));
+        when(villainRangeResolver.resolve(context)).thenReturn(Optional.empty());
+        when(decisionRuleRepository.findByStrategyProfileIdAndStreetAndScenarioTypeAndActiveTrueOrderByPriorityAsc(
+                context.getStrategyProfile().getId(), context.getStreet(), context.getScenarioType()
+        )).thenReturn(List.of());
+
+        var response = service.decide(request(profileId, List.of("As", "Ks")));
+
+        assertThat(response.status()).isEqualTo(DecisionStatus.SUCCESS);
+        assertThat(response.recommendedAction()).isEqualTo(ActionType.FOLD);
+    }
+
     private StrategyProfile profile() {
         StrategyProfile profile = new StrategyProfile();
         ReflectionTestUtils.setField(profile, "id", UUID.randomUUID());
@@ -155,6 +203,9 @@ class DecisionEngineServiceImplTest {
     private DecisionRequestDto request(UUID profileId, List<String> heroCards) {
         return new DecisionRequestDto(
                 profileId,
+                null,
+                null,
+                GameType.CASH,
                 Position.BTN,
                 Position.BB,
                 Street.FLOP,

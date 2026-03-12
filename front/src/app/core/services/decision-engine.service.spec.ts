@@ -5,6 +5,7 @@ import { ApiHttpService } from './api-http.service';
 import { DecisionRequest } from '../models/decision.models';
 import {
   ActionType,
+  GameType,
   DecisionStatus,
   PlayerPosition,
   ScenarioType,
@@ -33,6 +34,7 @@ describe('DecisionEngineService', () => {
   it('posts decision request and returns result', () => {
     const request: DecisionRequest = {
       strategyProfileId: 'profile-1',
+      gameType: GameType.CASH,
       heroPosition: PlayerPosition.BTN,
       villainPosition: PlayerPosition.BB,
       scenarioType: ScenarioType.OPEN_FIRST_IN,
@@ -50,7 +52,7 @@ describe('DecisionEngineService', () => {
       expect(result.matchedRuleName).toBe('BTN open');
     });
 
-    const req = httpMock.expectOne(`${APP_CONFIG.apiBaseUrl}/decision-assistant/decide`);
+    const req = httpMock.expectOne(`${APP_CONFIG.apiBaseUrl}/decision`);
     expect(req.request.method).toBe('POST');
     req.flush({
       status: DecisionStatus.SUCCESS,

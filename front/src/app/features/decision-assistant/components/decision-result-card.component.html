@@ -1,15 +1,36 @@
-<div class="card" *ngIf="result">
-  <div class="title">Decision</div>
-  <div class="row"><span>Status</span><strong>{{ result.status | readableCode }}</strong></div>
-  <div class="row"><span>Action</span><strong>{{ (result.recommendedAction || '-') | readableCode }}</strong></div>
-  <div class="row"><span>Sizing</span><strong>{{ result.recommendedSizingValue ?? '-' }}</strong></div>
-  <div class="row"><span>Regle</span><strong>{{ result.matchedRuleName || '-' }}</strong></div>
-  <div class="stacked" *ngIf="result.explanation">
-    <span>Explication</span>
-    <strong>{{ result.explanation }}</strong>
-  </div>
-  <div class="stacked" *ngIf="result.warnings.length">
-    <span>Warnings</span>
-    <strong>{{ result.warnings.join(' � ') }}</strong>
-  </div>
-</div>
+﻿<mat-card *ngIf="result; else emptyState">
+  <mat-card-header>
+    <mat-card-title>Resultat de decision</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content class="content">
+    <div class="row"><span>Statut</span><strong>{{ result.status | readableCode }}</strong></div>
+    <div class="row"><span>Action recommandee</span><strong>{{ (result.recommendedAction || '-') | readableCode }}</strong></div>
+    <div class="row"><span>Sizing recommande</span><strong>{{ result.recommendedSizingValue ?? '-' }}</strong></div>
+    <div class="row"><span>Regle matchee</span><strong>{{ result.matchedRuleName || '-' }}</strong></div>
+    <div class="stacked">
+      <span>Message</span>
+      <strong>{{ result.explanation }}</strong>
+    </div>
+
+    <div class="stacked" *ngIf="(result.warnings?.length || 0) > 0">
+      <span>Avertissements</span>
+      <strong>{{ result.warnings?.join(' · ') }}</strong>
+    </div>
+
+    <div class="stacked" *ngIf="(result.matchedCandidates?.length || 0) > 0">
+      <span>Candidates matchees</span>
+      <ul class="candidates">
+        <li *ngFor="let candidate of result.matchedCandidates">
+          {{ candidate.ruleName }} (prio {{ candidate.priority }}, conditions {{ candidate.matchedConditionCount }})
+        </li>
+      </ul>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<ng-template #emptyState>
+  <mat-card>
+    <mat-card-content>Aucune decision calculee pour le moment.</mat-card-content>
+  </mat-card>
+</ng-template>

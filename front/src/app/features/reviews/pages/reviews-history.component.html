@@ -1,7 +1,87 @@
 <h2>Historique de review</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()" class="form">
+  <mat-form-field appearance="outline">
+    <mat-label>Profil</mat-label>
+    <mat-select formControlName="strategyProfileId">
+      <mat-option *ngFor="let profile of profiles$ | async" [value]="profile.id">{{ profile.name }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Main hero</mat-label>
+    <input matInput formControlName="heroHandCode" placeholder="AKO" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Board</mat-label>
+    <input matInput formControlName="boardCards" placeholder="Ah,Kd,7s" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Decision status</mat-label>
+    <mat-select formControlName="decisionStatus">
+      <mat-option *ngFor="let status of decisionStatuses" [value]="status">{{ status | readableCode }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Action recommandee</mat-label>
+    <mat-select formControlName="recommendedAction">
+      <mat-option *ngFor="let action of actionTypes" [value]="action">{{ action | readableCode }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Action jouee</mat-label>
+    <mat-select formControlName="actualAction">
+      <mat-option *ngFor="let action of actionTypes" [value]="action">{{ action | readableCode }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Resultat (bb)</mat-label>
+    <input matInput type="number" formControlName="netResultInBigBlinds" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Issue</mat-label>
+    <mat-select formControlName="issue">
+      <mat-option *ngFor="let issue of issues" [value]="issue">{{ issue | readableCode }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Situation</mat-label>
+    <textarea matInput rows="2" formControlName="situationSummary"></textarea>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Explication moteur</mat-label>
+    <textarea matInput rows="2" formControlName="engineExplanation"></textarea>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Note review</mat-label>
+    <textarea matInput rows="2" formControlName="reviewNote"></textarea>
+  </mat-form-field>
+
+  <button mat-raised-button color="primary" type="submit" [disabled]="(loading$ | async) || form.invalid">Creer review</button>
+</form>
+
+<p *ngIf="error$ | async as error" class="error">{{ error }}</p>
+
 <ul>
   <li *ngFor="let review of reviews$ | async">
-    <a [routerLink]="['/reviews', review.id]">{{ review.label }}</a>
-    <span class="meta">{{ review.status }}</span>
+    <a [routerLink]="['/reviews', review.id]">
+      {{ review.strategyProfileName }} - {{ review.heroHandCode || 'N/A' }}
+    </a>
+    <span class="meta">
+      {{ (review.decisionStatus || 'N/A') | readableCode }} |
+      rec {{ (review.recommendedAction || 'N/A') | readableCode }} |
+      joue {{ (review.actualAction || 'N/A') | readableCode }} |
+      {{ review.netResultInBigBlinds ?? 0 }}bb |
+      {{ (review.issue || 'N/A') | readableCode }}
+    </span>
   </li>
 </ul>

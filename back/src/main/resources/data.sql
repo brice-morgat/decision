@@ -126,8 +126,8 @@ INSERT INTO decision_result_trace (decision_result_id, trace_entry) VALUES
 ('62000000-0000-0000-0000-000000000001', 'Hero range resolved.'),
 ('62000000-0000-0000-0000-000000000001', 'Rule BTN open value selected.');
 
-INSERT INTO hand_outcomes (id, created_at, updated_at, actual_action, net_result_in_big_blinds, showdown_reached, note) VALUES
-('63000000-0000-0000-0000-000000000001', '2026-03-11 10:06:40', '2026-03-11 10:06:40', 'OPEN', 3.80, FALSE, 'Open vole les blinds.');
+INSERT INTO hand_outcomes (id, created_at, updated_at, actual_action, net_result_in_big_blinds, issue, showdown_reached, note) VALUES
+('63000000-0000-0000-0000-000000000001', '2026-03-11 10:06:40', '2026-03-11 10:06:40', 'OPEN', 3.80, 'WIN', FALSE, 'Open vole les blinds.');
 
 INSERT INTO hand_reviews (id, created_at, updated_at, strategy_profile_id, decision_input_id, decision_context_id, decision_result_id, hand_outcome_id, review_note) VALUES
 ('64000000-0000-0000-0000-000000000001', '2026-03-11 10:06:50', '2026-03-11 10:06:50', '10000000-0000-0000-0000-000000000001', '60000000-0000-0000-0000-000000000001', '61000000-0000-0000-0000-000000000001', '62000000-0000-0000-0000-000000000001', '63000000-0000-0000-0000-000000000001', 'Main de demonstration pour l''historique.');

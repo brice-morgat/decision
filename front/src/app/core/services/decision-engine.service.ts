@@ -11,6 +11,6 @@ export class DecisionEngineService {
   constructor(private readonly api: ApiHttpService) {}
 
   evaluate(request: DecisionRequest): Observable<DecisionResult> {
-    return this.api.post<DecisionResult>('/decision-assistant/decide', request);
+    return this.api.post<DecisionResult>('/decision', request);
   }
 }

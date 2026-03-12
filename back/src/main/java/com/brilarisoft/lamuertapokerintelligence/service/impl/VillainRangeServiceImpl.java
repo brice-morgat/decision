@@ -8,12 +8,14 @@ import com.brilarisoft.lamuertapokerintelligence.dto.range.VillainRangeContextQu
 import com.brilarisoft.lamuertapokerintelligence.dto.range.VillainRangeDetailDto;
 import com.brilarisoft.lamuertapokerintelligence.dto.range.VillainRangeSummaryDto;
 import com.brilarisoft.lamuertapokerintelligence.dto.range.VillainRangeUpsertDto;
+import com.brilarisoft.lamuertapokerintelligence.dto.range.VillainRangeScopeDto;
 import com.brilarisoft.lamuertapokerintelligence.exception.BusinessValidationException;
 import com.brilarisoft.lamuertapokerintelligence.exception.NotFoundException;
 import com.brilarisoft.lamuertapokerintelligence.mapper.VillainRangeMapper;
 import com.brilarisoft.lamuertapokerintelligence.repository.StrategyProfileRepository;
 import com.brilarisoft.lamuertapokerintelligence.repository.VillainRangeSetRepository;
 import com.brilarisoft.lamuertapokerintelligence.service.VillainRangeService;
+import com.brilarisoft.lamuertapokerintelligence.service.range.VillainRangeContextResolver;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,21 +33,25 @@ public class VillainRangeServiceImpl implements VillainRangeService {
     private final VillainRangeSetRepository villainRangeSetRepository;
     private final StrategyProfileRepository strategyProfileRepository;
     private final VillainRangeMapper villainRangeMapper;
+    private final VillainRangeContextResolver villainRangeContextResolver;
 
     public VillainRangeServiceImpl(
             VillainRangeSetRepository villainRangeSetRepository,
             StrategyProfileRepository strategyProfileRepository,
-            VillainRangeMapper villainRangeMapper
+            VillainRangeMapper villainRangeMapper,
+            VillainRangeContextResolver villainRangeContextResolver
     ) {
         this.villainRangeSetRepository = villainRangeSetRepository;
         this.strategyProfileRepository = strategyProfileRepository;
         this.villainRangeMapper = villainRangeMapper;
+        this.villainRangeContextResolver = villainRangeContextResolver;
     }
 
     @Override
     public VillainRangeDetailDto createRange(VillainRangeUpsertDto request) {
         VillainRangeSet rangeSet = new VillainRangeSet();
         villainRangeMapper.updateEntity(rangeSet, request);
+        validateScopes(request.scopes());
         rangeSet.setStrategyProfile(strategyProfileRepository.findById(request.profileId())
                 .orElseThrow(() -> new NotFoundException("Strategy profile not found: " + request.profileId())));
         validateLogicalUniqueness(request, null);
@@ -60,8 +66,15 @@ public class VillainRangeServiceImpl implements VillainRangeService {
                     .orElseThrow(() -> new NotFoundException("Strategy profile not found: " + request.profileId())));
         }
         villainRangeMapper.updateEntity(rangeSet, request);
+        validateScopes(request.scopes());
         validateLogicalUniqueness(request, rangeId);
         return villainRangeMapper.toDetailDto(villainRangeSetRepository.save(rangeSet));
+    }
+
+    @Override
+    public VillainRangeDetailDto bulkUpsert(VillainRangeUpsertDto request) {
+        validateScopes(request.scopes());
+        return createRange(request);
     }
 
     @Override
@@ -79,14 +92,13 @@ public class VillainRangeServiceImpl implements VillainRangeService {
     @Transactional(readOnly = true)
     public VillainRangeDetailDto getRangeByContext(VillainRangeContextQueryDto query) {
         validateContext(query);
-        VillainRangeSet rangeSet = villainRangeSetRepository
-                .findByStrategyProfileIdAndGameTypeAndStreetAndVillainPositionAndHeroPositionAndScenarioTypeAndTriggerActionTypeAndLineSignature(
+        VillainRangeSet rangeSet = villainRangeContextResolver.resolve(
                         query.profileId(),
                         query.gameType(),
                         query.street(),
+                        query.scenarioType(),
                         query.villainPosition(),
                         query.heroPosition(),
-                        query.scenarioType(),
                         query.triggerActionCode(),
                         normalizeNullable(query.lineSignature())
                 )
@@ -134,6 +146,27 @@ public class VillainRangeServiceImpl implements VillainRangeService {
                 .ifPresent(existing -> {
                     throw new BusinessValidationException("A villain range already exists for this context");
                 });
+
+        if (request.scopes() == null || request.scopes().isEmpty()) {
+            return;
+        }
+
+        request.scopes().stream()
+                .filter(scope -> scope.villainPosition() != null)
+                .forEach(scope -> villainRangeSetRepository.findByStrategyProfileIdAndGameTypeAndStreetAndVillainPositionAndHeroPositionAndScenarioTypeAndTriggerActionTypeAndLineSignature(
+                                request.profileId(),
+                                request.gameType(),
+                                request.street(),
+                                scope.villainPosition(),
+                                scope.heroPosition(),
+                                request.scenarioType(),
+                                scope.triggerActionCode(),
+                                normalizeNullable(scope.lineSignature())
+                        )
+                        .filter(existing -> currentRangeId == null || existing.getId() == null || !existing.getId().equals(currentRangeId))
+                        .ifPresent(existing -> {
+                            throw new BusinessValidationException("A villain range already exists for one of the supplied scopes");
+                        }));
     }
 
     private void validateContext(VillainRangeContextQueryDto query) {
@@ -164,5 +197,29 @@ public class VillainRangeServiceImpl implements VillainRangeService {
             return null;
         }
         return value.trim();
+    }
+
+    private void validateScopes(List<VillainRangeScopeDto> scopes) {
+        if (scopes == null || scopes.isEmpty()) {
+            return;
+        }
+
+        Set<String> uniqueKeys = new HashSet<>();
+        for (VillainRangeScopeDto scope : scopes) {
+            String key = String.join("|",
+                    safeString(scope.heroPosition()),
+                    safeString(scope.villainPosition()),
+                    safeString(scope.triggerActionCode()),
+                    safeString(normalizeNullable(scope.lineSignature())),
+                    String.valueOf(scope.scopeWeight() == null ? 0 : scope.scopeWeight())
+            );
+            if (!uniqueKeys.add(key)) {
+                throw new BusinessValidationException("Duplicate villain range scope in request");
+            }
+        }
+    }
+
+    private String safeString(Object value) {
+        return value == null ? "" : String.valueOf(value);
     }
 }

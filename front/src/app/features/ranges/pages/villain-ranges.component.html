@@ -14,67 +14,92 @@
   <div class="range-page__grid">
     <mat-card>
       <mat-card-header>
-        <mat-card-title>Contexte vilain</mat-card-title>
+        <mat-card-title>Spot vilain</mat-card-title>
+        <mat-card-subtitle>Selection rapide d'un spot puis edition directe dans la matrice.</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <form [formGroup]="filtersForm" class="range-page__form">
-          <mat-form-field appearance="outline">
-            <mat-label>Profil</mat-label>
-            <mat-select formControlName="profileId">
-              <mat-option *ngFor="let profile of profiles" [value]="profile.id">{{ profile.name }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+        <div class="range-page__button-group">
+          <button
+            mat-stroked-button
+            type="button"
+            *ngFor="let profile of profiles"
+            [class.active-choice]="filtersForm.controls.profileId.value === profile.id"
+            (click)="onProfileQuickSelect(profile.id)">
+            {{ profile.name }}
+          </button>
+        </div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Type de jeu</mat-label>
-            <mat-select formControlName="gameType">
-              <mat-option *ngFor="let option of gameTypes" [value]="option">{{ option | readableCode }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+        <div class="range-page__button-group">
+          <button
+            mat-stroked-button
+            type="button"
+            *ngFor="let spot of quickSpots"
+            [class.active-choice]="selectedQuickSpotCode === spot.code"
+            (click)="onQuickSpotSelect(spot.code)">
+            {{ spot.label }}
+          </button>
+        </div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Street</mat-label>
-            <mat-select formControlName="street">
-              <mat-option *ngFor="let option of streets" [value]="option">{{ option | readableCode }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+        <button mat-stroked-button type="button" (click)="loadByContext()">Charger le spot</button>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Position vilain</mat-label>
-            <mat-select formControlName="villainPosition">
-              <mat-option *ngFor="let option of positions" [value]="option">{{ option | readableCode }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+        <form [formGroup]="filtersForm">
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>Contexte avance</mat-panel-title>
+            </mat-expansion-panel-header>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Position hero</mat-label>
-            <mat-select formControlName="heroPosition">
-              <mat-option value="">Aucune</mat-option>
-              <mat-option *ngFor="let option of positions" [value]="option">{{ option | readableCode }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+            <div class="range-page__form">
+              <mat-form-field appearance="outline">
+                <mat-label>Type de jeu</mat-label>
+                <mat-select formControlName="gameType">
+                  <mat-option *ngFor="let option of gameTypes" [value]="option">{{ option | readableCode }}</mat-option>
+                </mat-select>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Scenario</mat-label>
-            <mat-select formControlName="scenarioType">
-              <mat-option *ngFor="let option of scenarioTypes" [value]="option">{{ option | readableCode }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Street</mat-label>
+                <mat-select formControlName="street">
+                  <mat-option *ngFor="let option of streets" [value]="option">{{ option | readableCode }}</mat-option>
+                </mat-select>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Action declenchante</mat-label>
-            <mat-select formControlName="triggerActionCode">
-              <mat-option value="">Aucune</mat-option>
-              <mat-option *ngFor="let option of actionTypes" [value]="option">{{ option | readableCode }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Position vilain</mat-label>
+                <mat-select formControlName="villainPosition">
+                  <mat-option *ngFor="let option of positions" [value]="option">{{ option | readableCode }}</mat-option>
+                </mat-select>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Signature de ligne</mat-label>
-            <input matInput formControlName="lineSignature" />
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Position hero</mat-label>
+                <mat-select formControlName="heroPosition">
+                  <mat-option value="">Aucune</mat-option>
+                  <mat-option *ngFor="let option of positions" [value]="option">{{ option | readableCode }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Scenario</mat-label>
+                <mat-select formControlName="scenarioType">
+                  <mat-option *ngFor="let option of scenarioTypes" [value]="option">{{ option | readableCode }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Action declenchante</mat-label>
+                <mat-select formControlName="triggerActionCode">
+                  <mat-option value="">Aucune</mat-option>
+                  <mat-option *ngFor="let option of actionTypes" [value]="option">{{ option | readableCode }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Signature de ligne</mat-label>
+                <input matInput formControlName="lineSignature" />
+              </mat-form-field>
+            </div>
+          </mat-expansion-panel>
         </form>
-        <button mat-stroked-button type="button" (click)="loadByContext()">Charger par contexte</button>
       </mat-card-content>
     </mat-card>
 
@@ -95,18 +120,25 @@
             <textarea matInput rows="3" formControlName="description"></textarea>
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Priorite</mat-label>
-            <input matInput type="number" formControlName="priority" />
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Notes</mat-label>
-            <textarea matInput rows="4" formControlName="notes"></textarea>
-          </mat-form-field>
-
           <mat-checkbox formControlName="enabled">Range active</mat-checkbox>
         </form>
+
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>Options avancees de la range</mat-panel-title>
+          </mat-expansion-panel-header>
+          <form [formGroup]="metadataForm" class="range-page__form">
+            <mat-form-field appearance="outline">
+              <mat-label>Priorite</mat-label>
+              <input matInput type="number" formControlName="priority" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Notes</mat-label>
+              <textarea matInput rows="4" formControlName="notes"></textarea>
+            </mat-form-field>
+          </form>
+        </mat-expansion-panel>
       </mat-card-content>
     </mat-card>
 
@@ -124,8 +156,96 @@
 
   <p *ngIf="feedbackMessage" class="range-page__feedback">{{ feedbackMessage }}</p>
 
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Mode d'edition villain</mat-card-title>
+      <mat-card-subtitle>Standard par spot ou edition detaillee</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="standardForm" class="range-page__form">
+        <div class="range-page__button-group">
+          <button
+            mat-stroked-button
+            type="button"
+            *ngFor="let mode of villainEditionModes"
+            [class.active-choice]="standardForm.controls.mode.value === mode"
+            (click)="onEditionMode(mode)">
+            {{ mode | readableCode }}
+          </button>
+        </div>
+
+        <ng-container *ngIf="!isAdvancedMode">
+          <div class="range-page__button-group">
+            <button
+              mat-stroked-button
+              type="button"
+              *ngFor="let preset of villainPresets"
+              [class.active-choice]="standardForm.controls.preset.value === preset"
+              (click)="standardForm.controls.preset.setValue(preset)">
+              {{ preset | readableCode }}
+            </button>
+          </div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Largeur range (%)</mat-label>
+            <input matInput type="number" formControlName="rangeWidthPercent" min="5" max="90" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Agressivite (%)</mat-label>
+            <input matInput type="number" formControlName="aggressionPercent" min="0" max="100" />
+          </mat-form-field>
+
+          <div>
+            <p>Appliquer aux positions vilain</p>
+            <div class="range-page__button-group">
+              <button
+                mat-stroked-button
+                type="button"
+                *ngFor="let option of positions"
+                [class.active-choice]="standardForm.controls.applyVillainPositions.value.includes(option)"
+                (click)="toggleVillainPosition(option)">
+                {{ option | readableCode }}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <p>Appliquer aux positions hero (optionnel)</p>
+            <div class="range-page__button-group">
+              <button
+                mat-stroked-button
+                type="button"
+                *ngFor="let option of positions"
+                [class.active-choice]="standardForm.controls.applyHeroPositions.value.includes(option)"
+                (click)="toggleHeroPosition(option)">
+                {{ option | readableCode }}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <p>Appliquer aux actions declenchantes (optionnel)</p>
+            <div class="range-page__button-group">
+              <button
+                mat-stroked-button
+                type="button"
+                *ngFor="let option of actionTypes"
+                [class.active-choice]="standardForm.controls.applyTriggerActions.value.includes(option)"
+                (click)="toggleTriggerAction(option)">
+                {{ option | readableCode }}
+              </button>
+            </div>
+          </div>
+
+          <button mat-stroked-button type="button" (click)="applyStandardPreset()">Appliquer preset</button>
+        </ng-container>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
   <div class="range-page__workspace">
-    <mat-card class="range-page__matrix-card">
+    <mat-card class="range-page__matrix-card" *ngIf="isAdvancedMode; else standardSummary">
       <mat-card-header>
         <div>
           <mat-card-title>Matrice vilain 13x13</mat-card-title>
@@ -140,6 +260,18 @@
           <button mat-button type="button" [disabled]="selectionCount === 0" (click)="clearSelection()">Vider la selection</button>
         </div>
 
+        <div class="range-page__button-group">
+          <button
+            mat-stroked-button
+            type="button"
+            *ngFor="let preset of tagPresets"
+            [class.active-choice]="selectedTagPreset === preset.code"
+            [style.--choice-color]="preset.color"
+            (click)="onTagPresetSelect(preset.code)">
+            {{ preset.label }}
+          </button>
+        </div>
+
         <app-poker-hand-matrix
           [cells]="matrixCells"
           [selectedHandCodes]="selectedHandCodes"
@@ -149,8 +281,23 @@
     </mat-card>
 
     <app-villain-range-cell-editor
+      *ngIf="isAdvancedMode"
       [handCodes]="selectedHandCodes"
       [cells]="selectedCells"
       (patchCell)="patchSelectedCell($event)"></app-villain-range-cell-editor>
   </div>
+
+  <ng-template #standardSummary>
+    <mat-card class="range-page__matrix-card">
+      <mat-card-header>
+        <mat-card-title>Mode standard actif</mat-card-title>
+        <mat-card-subtitle>La range est geree par preset et sliders. Passe en mode avance pour editer main par main.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-chip-set>
+          <mat-chip>{{ activeCellsCount }} mains activees</mat-chip>
+        </mat-chip-set>
+      </mat-card-content>
+    </mat-card>
+  </ng-template>
 </section>

@@ -1,5 +1,9 @@
-<h2>Assistant de decision</h2>
+<h2>Assistant de decision (spot-first)</h2>
 <div class="grid">
-  <app-decision-context-form (submitDecision)="onSubmit($event)"></app-decision-context-form>
+  <app-decision-context-form
+    [submitting]="(loading$ | async) ?? false"
+    [errorMessage]="error$ | async"
+    (submitDecision)="onSubmit($event)"
+  ></app-decision-context-form>
   <app-decision-result-card [result]="result$ | async"></app-decision-result-card>
 </div>

@@ -2,6 +2,7 @@ package com.brilarisoft.lamuertapokerintelligence.domain.history;
 
 import com.brilarisoft.lamuertapokerintelligence.domain.common.BaseEntity;
 import com.brilarisoft.lamuertapokerintelligence.domain.referential.ActionType;
+import com.brilarisoft.lamuertapokerintelligence.domain.referential.ReviewIssue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -23,6 +24,10 @@ public class HandOutcome extends BaseEntity {
     @Column(precision = 10, scale = 2)
     private BigDecimal netResultInBigBlinds;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
+    private ReviewIssue issue;
+
     @Column(nullable = false)
     private boolean showdownReached;
 
@@ -43,6 +48,14 @@ public class HandOutcome extends BaseEntity {
 
     public void setNetResultInBigBlinds(BigDecimal netResultInBigBlinds) {
         this.netResultInBigBlinds = netResultInBigBlinds;
+    }
+
+    public ReviewIssue getIssue() {
+        return issue;
+    }
+
+    public void setIssue(ReviewIssue issue) {
+        this.issue = issue;
     }
 
     public boolean isShowdownReached() {

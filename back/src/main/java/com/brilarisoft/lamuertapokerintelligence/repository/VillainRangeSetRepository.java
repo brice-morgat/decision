@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface VillainRangeSetRepository extends JpaRepository<VillainRangeSet, UUID> {
 
@@ -24,5 +26,22 @@ public interface VillainRangeSetRepository extends JpaRepository<VillainRangeSet
             ScenarioType scenarioType,
             ActionType triggerActionType,
             String lineSignature
+    );
+
+    @Query("""
+            select distinct rangeSet
+            from VillainRangeSet rangeSet
+            left join fetch rangeSet.scopes scopes
+            where rangeSet.strategyProfile.id = :strategyProfileId
+              and rangeSet.gameType = :gameType
+              and rangeSet.street = :street
+              and rangeSet.scenarioType = :scenarioType
+              and rangeSet.enabled = true
+            """)
+    List<VillainRangeSet> findCandidatesWithScopes(
+            @Param("strategyProfileId") UUID strategyProfileId,
+            @Param("gameType") GameType gameType,
+            @Param("street") Street street,
+            @Param("scenarioType") ScenarioType scenarioType
     );
 }

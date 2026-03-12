@@ -12,6 +12,8 @@ public interface VillainRangeService {
 
     VillainRangeDetailDto createRange(VillainRangeUpsertDto request);
 
+    VillainRangeDetailDto bulkUpsert(VillainRangeUpsertDto request);
+
     VillainRangeDetailDto updateRange(UUID rangeId, VillainRangeUpsertDto request);
 
     void deleteRange(UUID rangeId);

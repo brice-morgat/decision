@@ -65,6 +65,10 @@ export class RangesService {
     return this.api.post<VillainRangeDetail>('/ranges/villain', payload);
   }
 
+  bulkVillain(payload: VillainRangeUpsertPayload): Observable<VillainRangeDetail> {
+    return this.api.post<VillainRangeDetail>('/ranges/villain/bulk', payload);
+  }
+
   updateVillain(id: string, payload: VillainRangeUpsertPayload): Observable<VillainRangeDetail> {
     return this.api.put<VillainRangeDetail>(`/ranges/villain/${id}`, payload);
   }
