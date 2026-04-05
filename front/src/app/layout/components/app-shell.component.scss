@@ -1,9 +1,12 @@
+@use '../../../assets/styles/theme-mixins' as theme;
+
 .shell-background {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(circle at 10% 10%, rgba(0, 145, 145, 0.12), transparent 24%),
-    radial-gradient(circle at 92% 18%, rgba(247, 148, 29, 0.18), transparent 20%);
+    radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.12), transparent 26%),
+    radial-gradient(circle at 100% 0%, rgba(239, 68, 68, 0.12), transparent 22%),
+    linear-gradient(180deg, rgba(9, 11, 18, 0.1), rgba(9, 11, 18, 0.72));
   pointer-events: none;
 }
 
@@ -16,10 +19,12 @@
 
 .shell-sidenav {
   width: 320px;
+  display: flex;
+  flex-direction: column;
   padding: 1.2rem;
-  border-right: 1px solid rgba(22, 32, 46, 0.06);
-  background: rgba(250, 252, 253, 0.8);
-  backdrop-filter: blur(14px);
+  border-right: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(10, 13, 22, 0.96), rgba(16, 21, 35, 0.96));
+  box-shadow: inset -1px 0 0 rgba(112, 133, 184, 0.08);
 }
 
 .brand-panel {
@@ -34,18 +39,19 @@
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-size: 0.7rem;
-  color: #597081;
+  color: var(--ink-muted);
 }
 
 .brand-panel h1 {
   margin: 0;
   font-size: 2rem;
   line-height: 1;
+  color: var(--ink);
 }
 
 .brand-panel p {
   margin: 0.85rem 0 0;
-  color: #526173;
+  color: var(--ink-soft);
   line-height: 1.5;
 }
 
@@ -53,9 +59,21 @@
   margin-top: 0.8rem;
 }
 
-.active-link {
-  background: linear-gradient(90deg, rgba(0, 106, 106, 0.12), rgba(0, 106, 106, 0.04));
+.nav-list a[mat-list-item] {
   border-radius: 18px;
+  margin-bottom: 0.4rem;
+  color: var(--ink);
+  background: transparent;
+}
+
+.nav-list a[mat-list-item]:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.active-link {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.18), rgba(239, 68, 68, 0.12)) !important;
+  border: 1px solid rgba(112, 133, 184, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18);
 }
 
 .sidenav-footer {
@@ -67,10 +85,15 @@
   display: grid;
   gap: 0.35rem;
   padding: 1rem;
+  @include theme.panel-surface(20px);
+}
+
+.quick-card strong {
+  color: var(--ink);
 }
 
 .quick-card span {
-  color: #526173;
+  color: var(--ink-soft);
 }
 
 .shell-content {
@@ -82,11 +105,16 @@
   gap: 1rem;
   min-height: 78px;
   padding: 0 2rem;
-  background: transparent;
+  background: rgba(9, 11, 18, 0.26);
+  backdrop-filter: blur(8px);
 }
 
 .top-bar__title {
   display: grid;
+}
+
+.top-bar__title strong {
+  color: var(--ink);
 }
 
 .top-bar__status {
@@ -94,9 +122,9 @@
   align-items: center;
   padding: 0.45rem 0.9rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(22, 32, 46, 0.08);
-  color: #355267;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.16), rgba(239, 68, 68, 0.14));
+  border: 1px solid rgba(112, 133, 184, 0.18);
+  color: var(--ink);
   font-size: 0.88rem;
 }
 

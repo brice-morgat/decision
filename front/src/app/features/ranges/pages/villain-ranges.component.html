@@ -2,7 +2,7 @@
   <div class="range-page__header">
     <div>
       <h1>Ranges vilain</h1>
-      <p>Editez une range contextuelle avec poids et tags, puis persistez l'ensemble des cellules.</p>
+      <p>Construisez vos ranges vilain avec poids et tags, puis persistez l'ensemble des cellules.</p>
     </div>
     <div class="range-page__actions">
       <button mat-stroked-button type="button" (click)="newRange()">Nouvelle range</button>
@@ -14,8 +14,8 @@
   <div class="range-page__grid">
     <mat-card>
       <mat-card-header>
-        <mat-card-title>Spot vilain</mat-card-title>
-        <mat-card-subtitle>Selection rapide d'un spot puis edition directe dans la matrice.</mat-card-subtitle>
+        <mat-card-title>Base vilain</mat-card-title>
+        <mat-card-subtitle>Choisis un profil, puis charge ou cree une range vilain libre.</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <div class="range-page__button-group">
@@ -28,24 +28,15 @@
             {{ profile.name }}
           </button>
         </div>
-
-        <div class="range-page__button-group">
-          <button
-            mat-stroked-button
-            type="button"
-            *ngFor="let spot of quickSpots"
-            [class.active-choice]="selectedQuickSpotCode === spot.code"
-            (click)="onQuickSpotSelect(spot.code)">
-            {{ spot.label }}
-          </button>
+        <div class="range-page__actions">
+          <button mat-stroked-button type="button" (click)="loadByContext()">Charger par metadonnees</button>
+          <button mat-button type="button" (click)="newRange()">Demarrer une range vide</button>
         </div>
-
-        <button mat-stroked-button type="button" (click)="loadByContext()">Charger le spot</button>
 
         <form [formGroup]="filtersForm">
           <mat-expansion-panel>
             <mat-expansion-panel-header>
-              <mat-panel-title>Contexte avance</mat-panel-title>
+              <mat-panel-title>Metadonnees avancees</mat-panel-title>
             </mat-expansion-panel-header>
 
             <div class="range-page__form">
@@ -77,10 +68,18 @@
                   <mat-option *ngFor="let option of positions" [value]="option">{{ option | readableCode }}</mat-option>
                 </mat-select>
               </mat-form-field>
+            </div>
 
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title>Contexte optionnel</mat-panel-title>
+              </mat-expansion-panel-header>
+
+              <div class="range-page__form">
               <mat-form-field appearance="outline">
                 <mat-label>Scenario</mat-label>
                 <mat-select formControlName="scenarioType">
+                  <mat-option value="">Aucun</mat-option>
                   <mat-option *ngFor="let option of scenarioTypes" [value]="option">{{ option | readableCode }}</mat-option>
                 </mat-select>
               </mat-form-field>
@@ -97,7 +96,8 @@
                 <mat-label>Signature de ligne</mat-label>
                 <input matInput formControlName="lineSignature" />
               </mat-form-field>
-            </div>
+              </div>
+            </mat-expansion-panel>
           </mat-expansion-panel>
         </form>
       </mat-card-content>
@@ -145,10 +145,11 @@
     <mat-card>
       <mat-card-header>
         <mat-card-title>Ranges du profil</mat-card-title>
+        <mat-card-subtitle>Bibliotheque vilain reutilisable</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content class="range-page__summary-list">
         <button mat-button type="button" *ngFor="let range of rangeSummaries" (click)="openRange(range.id)">
-          {{ range.name }} - {{ range.villainPosition | readableCode }} - {{ range.scenarioType | readableCode }}
+          {{ range.name }} - {{ range.villainPosition | readableCode }} - {{ range.street | readableCode }}
         </button>
       </mat-card-content>
     </mat-card>
@@ -157,10 +158,10 @@
   <p *ngIf="feedbackMessage" class="range-page__feedback">{{ feedbackMessage }}</p>
 
   <mat-card>
-    <mat-card-header>
-      <mat-card-title>Mode d'edition villain</mat-card-title>
-      <mat-card-subtitle>Standard par spot ou edition detaillee</mat-card-subtitle>
-    </mat-card-header>
+      <mat-card-header>
+        <mat-card-title>Mode d'edition villain</mat-card-title>
+        <mat-card-subtitle>Preset rapide ou edition detaillee main par main</mat-card-subtitle>
+      </mat-card-header>
     <mat-card-content>
       <form [formGroup]="standardForm" class="range-page__form">
         <div class="range-page__button-group">

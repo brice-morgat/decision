@@ -22,19 +22,23 @@ Le systeme doit rester organise autour des couches suivantes :
 1. referentiel poker
 2. moteur de ranges
 3. moteur de reconstruction d'etat
-4. moteur de regles
-5. moteur de decision
-6. historisation et analyse
-7. orchestration applicative
-8. presentation
+4. moteur de decision range-first
+5. moteur de regles secondaire
+6. moteur d'analyse et d'equity informative
+7. historisation et analyse
+8. orchestration applicative
+9. presentation
 
 Flux nominal :
 
-1. le frontend saisit une situation
+1. le frontend selectionne une base hero, une main hero et eventuellement une base vilain
 2. le backend reconstruit l'etat de jeu
-3. le backend enrichit le contexte avec les ranges applicables
-4. le backend filtre et evalue les regles
-5. le backend produit un `DecisionResult`
+3. le backend lit la cellule hero correspondante dans la range selectionnee
+4. le backend ajuste la lecture hero contre la range vilain si elle est fournie
+5. le backend calcule un bloc `analysis`
+6. le backend calcule un bloc `equity` purement informatif si la range vilain est exploitable
+7. le backend evalue les regles uniquement comme detail technique secondaire
+8. le backend produit un `DecisionResult`
 6. le frontend affiche la decision et ses explications
 
 ## Mapping technique cible
@@ -72,7 +76,9 @@ Le backend doit converger vers des modules/cohesions proches de :
 - `situation` : action sequence, board state, decision input, decision context
 - `decision/state-reconstruction` : derivation deterministic du `DecisionContext` a partir de `DecisionInput` et `ActionSequence`
 - `rule` : regles, conditions, actions, priorites
-- `decision/rule-engine` : `ConditionEvaluator`, `RuleMatcher`, `PriorityResolver`, `DecisionAssembler`, `RuleEngineFacade`
+- `decision/range-first` : `HeroRangeDecisionResolver`, `VillainRangeAdjustmentService`, `DecisionAnalysisAssembler`
+- `decision/rule-engine` : `ConditionEvaluator`, `RuleMatcher`, `PriorityResolver`, `DecisionAssembler`, `RuleEngineFacade` pour enrichissement secondaire
+- `equity` : `EquityAnalysisService`, `MonteCarloEquityCalculator`, evaluation de showdown et tirage Monte Carlo
 - `decision` : orchestration du moteur
 - `review` : historisation, analyses, feedback
 - `settings` : parametres applicatifs
@@ -81,13 +87,16 @@ Le backend doit converger vers des modules/cohesions proches de :
 
 Le moteur doit rester decoupe en sous-responsabilites explicites :
 
-- `RangeResolver` : identifier la range hero, le label hero et la range villain applicable
+- `HeroRangeDecisionResolver` : lire la cellule hero et produire la lecture de base
+- `VillainRangeAdjustmentService` : ajuster la lecture hero contre la base vilain selectionnee
+- `DecisionAnalysisAssembler` : produire le bloc `analysis` du resultat
+- `EquityAnalysisService` : produire un bloc `equity` informatif sans impact sur la decision
 - `ContextInterpreter` : produire les indicateurs derives a partir du contexte et de la sequence d'actions
 - `StateReconstructionService` : reconstruire les flags de contexte et la `lineSignature` a partir de la sequence d'actions
-- `RuleMatcher` : filtrer les regles compatibles
-- `PriorityResolver` : resoudre les conflits de regles
-- `DecisionAssembler` : construire le `DecisionResult` explicite
-- `DecisionEngineService` : orchestrer validation, reconstruction, resolution de ranges et evaluation des regles
+- `RuleMatcher` : filtrer les regles compatibles pour la trace technique
+- `PriorityResolver` : resoudre les conflits de regles si la couche de trace est exploitee
+- `DecisionAssembler` : construire la partie `matchedCandidates` / details techniques
+- `DecisionEngineService` : orchestrer validation, reconstruction, resolution de ranges, analyse et enrichissements
 
 ## Contraintes d'architecture
 
@@ -95,6 +104,8 @@ Le moteur doit rester decoupe en sous-responsabilites explicites :
 - aucune dependance du moteur a l'interface ou a des composants UI
 - aucune decision basee sur une couleur
 - aucun texte libre si un referentiel ou un type fort existe
+- la decision nominale doit venir d'abord de la range hero, puis de l'opposition hero vs villain
+- le calcul d'equity ne doit jamais modifier l'action recommandee
 - en cas d'absence de decision, le backend renvoie un statut explicite (`NO_MATCH`, `INCOMPLETE_CONFIGURATION`, `CONFLICTING_RULES`, `INVALID_INPUT`)
 - le `DecisionResult` doit exposer la regle retenue et un resume des candidates evaluees
 

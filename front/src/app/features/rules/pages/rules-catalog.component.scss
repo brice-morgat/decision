@@ -1,3 +1,5 @@
+@use '../../../../assets/styles/theme-mixins' as theme;
+
 .rules-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -11,10 +13,7 @@
 
 .intro-card {
   padding: 1.75rem;
-  background:
-    linear-gradient(135deg, rgba(99, 102, 241, 0.92), rgba(0, 106, 106, 0.85)),
-    linear-gradient(135deg, #1e3a8a, #0f766e);
-  color: #f8fbff;
+  @include theme.accent-card(0.14, 0.18);
 }
 
 .intro-card h3 {
@@ -63,7 +62,7 @@
 
 .rule-card__description {
   margin: 0;
-  color: #344356;
+  color: var(--ink);
   line-height: 1.55;
   min-height: 3.1rem;
 }

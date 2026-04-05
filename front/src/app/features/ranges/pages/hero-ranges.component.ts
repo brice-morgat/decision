@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
 import { EMPTY, catchError, switchMap } from 'rxjs';
@@ -25,33 +26,20 @@ import { ProfilesService } from '../../../core/services/profiles.service';
 import { RangesService } from '../../../core/services/ranges.service';
 import { HandSelectionEvent } from '../components/poker-hand-matrix.component';
 
-interface HeroQuickSpot {
-  code: string;
-  label: string;
-  heroPosition: PlayerPosition;
-  scenarioType: ScenarioType;
-  street: Street;
-}
-
 @Component({
   selector: 'app-hero-ranges',
   templateUrl: './hero-ranges.component.html',
-  styleUrls: ['./hero-ranges.component.scss']
+  styleUrls: ['./hero-ranges.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HeroRangesComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+
   readonly gameTypes = GAME_TYPE_OPTIONS;
   readonly positions = PLAYER_POSITION_OPTIONS;
   readonly streets = STREET_OPTIONS;
   readonly scenarioTypes = SCENARIO_TYPE_OPTIONS;
   readonly legendOptions = STRATEGY_LEGEND_OPTIONS;
-  readonly quickSpots: HeroQuickSpot[] = [
-    { code: 'BTN_OPEN_FIRST_IN', label: 'BTN open first in', heroPosition: PlayerPosition.BTN, scenarioType: ScenarioType.OPEN_FIRST_IN, street: Street.PREFLOP },
-    { code: 'CO_OPEN_FIRST_IN', label: 'CO open first in', heroPosition: PlayerPosition.CO, scenarioType: ScenarioType.OPEN_FIRST_IN, street: Street.PREFLOP },
-    { code: 'SB_VS_BTN_OPEN', label: 'SB vs BTN open', heroPosition: PlayerPosition.SB, scenarioType: ScenarioType.FACING_OPEN, street: Street.PREFLOP },
-    { code: 'BB_VS_BTN_OPEN', label: 'BB vs BTN open', heroPosition: PlayerPosition.BB, scenarioType: ScenarioType.FACING_OPEN, street: Street.PREFLOP },
-    { code: 'BB_VS_CO_OPEN', label: 'BB vs CO open', heroPosition: PlayerPosition.BB, scenarioType: ScenarioType.FACING_OPEN, street: Street.PREFLOP },
-    { code: 'BTN_VS_3BET', label: 'BTN vs 3bet', heroPosition: PlayerPosition.BTN, scenarioType: ScenarioType.FACING_THREE_BET, street: Street.PREFLOP }
-  ];
   private readonly legendColors: Record<StrategyLegend, string> = {
     [StrategyLegend.OPEN]: '#4f7db8',
     [StrategyLegend.CALL]: '#3e8b46',
@@ -77,7 +65,7 @@ export class HeroRangesComponent implements OnInit {
     gameType: [GAME_TYPE_OPTIONS[0], Validators.required],
     street: [STREET_OPTIONS[0], Validators.required],
     heroPosition: [PLAYER_POSITION_OPTIONS[0], Validators.required],
-    scenarioType: [SCENARIO_TYPE_OPTIONS[0], Validators.required],
+    scenarioType: ['' as ScenarioType | ''],
     subScenarioCode: ['']
   });
 
@@ -97,7 +85,6 @@ export class HeroRangesComponent implements OnInit {
   currentRangeName = 'Nouvelle range hero';
   warningMessage: string | null = null;
   feedbackMessage: string | null = null;
-  selectedQuickSpotCode = 'BTN_OPEN_FIRST_IN';
   selectedLegendPreset: StrategyLegend = StrategyLegend.OPEN;
   selectedPaintColor = this.legendColors[StrategyLegend.OPEN];
 
@@ -105,31 +92,40 @@ export class HeroRangesComponent implements OnInit {
     private readonly fb: FormBuilder,
     private readonly route: ActivatedRoute,
     private readonly profilesService: ProfilesService,
-    private readonly rangesService: RangesService
+    private readonly rangesService: RangesService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.profilesService.list().subscribe((profiles) => {
+    this.profilesService.list()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((profiles) => {
       this.profiles = profiles;
       if (!this.filtersForm.controls.profileId.value && profiles.length > 0) {
         this.filtersForm.patchValue({
           profileId: profiles[0].id,
           gameType: profiles[0].gameType
         });
-        this.onQuickSpotSelect(this.selectedQuickSpotCode);
+        this.startDraft();
         this.loadRangeSummaries(profiles[0].id);
       }
+      this.cdr.markForCheck();
     });
 
-    this.filtersForm.controls.profileId.valueChanges.subscribe((profileId) => {
+    this.filtersForm.controls.profileId.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((profileId) => {
       if (profileId) {
         this.loadRangeSummaries(profileId);
       } else {
         this.rangeSummaries = [];
+        this.cdr.markForCheck();
       }
     });
 
-    this.route.queryParamMap.subscribe((params) => {
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
       const rangeId = params.get('rangeId');
       if (rangeId) {
         this.openRange(rangeId);
@@ -146,20 +142,6 @@ export class HeroRangesComponent implements OnInit {
     this.filtersForm.patchValue({
       profileId: profile.id,
       gameType: profile.gameType
-    });
-  }
-
-  onQuickSpotSelect(spotCode: string): void {
-    this.selectedQuickSpotCode = spotCode;
-    const spot = this.quickSpots.find((item) => item.code === spotCode);
-    if (!spot) {
-      return;
-    }
-
-    this.filtersForm.patchValue({
-      street: spot.street,
-      heroPosition: spot.heroPosition,
-      scenarioType: spot.scenarioType
     });
   }
 
@@ -203,9 +185,12 @@ export class HeroRangesComponent implements OnInit {
   }
 
   loadRangeSummaries(profileId: string): void {
-    this.rangesService.listHero(profileId).subscribe((ranges) => {
-      this.rangeSummaries = ranges;
-    });
+    this.rangesService.listHero(profileId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((ranges) => {
+        this.rangeSummaries = ranges;
+        this.cdr.markForCheck();
+      });
   }
 
   loadByContext(): void {
@@ -218,11 +203,15 @@ export class HeroRangesComponent implements OnInit {
     this.feedbackMessage = null;
 
     this.rangesService
-      .getHeroByContext(this.filtersForm.getRawValue())
+      .getHeroByContext({
+        ...this.filtersForm.getRawValue(),
+        scenarioType: this.getOptionalScenarioType()
+      })
       .pipe(
         catchError(() => {
           this.startDraft();
           this.feedbackMessage = 'Aucune range existante. Brouillon initialise a partir du contexte courant.';
+          this.cdr.markForCheck();
           return EMPTY;
         })
       )
@@ -232,7 +221,9 @@ export class HeroRangesComponent implements OnInit {
   openRange(rangeId: string): void {
     this.warningMessage = null;
     this.feedbackMessage = null;
-    this.rangesService.getHero(rangeId).subscribe((range) => this.applyRange(range));
+    this.rangesService.getHero(rangeId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((range) => this.applyRange(range));
   }
 
   newRange(): void {
@@ -255,6 +246,7 @@ export class HeroRangesComponent implements OnInit {
     const payload: HeroRangeUpsertPayload = {
       ...this.filtersForm.getRawValue(),
       ...this.metadataForm.getRawValue(),
+      scenarioType: this.getOptionalScenarioType(),
       subScenarioCode: this.filtersForm.controls.subScenarioCode.value || null,
       notes: this.metadataForm.controls.notes.value || null
     };
@@ -272,6 +264,7 @@ export class HeroRangesComponent implements OnInit {
       this.applyRange(range);
       this.feedbackMessage = 'Range hero enregistree.';
       this.loadRangeSummaries(range.profileId);
+      this.cdr.markForCheck();
     });
   }
 
@@ -281,13 +274,17 @@ export class HeroRangesComponent implements OnInit {
     }
 
     const profileId = this.filtersForm.controls.profileId.value;
-    this.rangesService.deleteHero(this.currentRangeId).subscribe(() => {
-      this.startDraft();
-      this.feedbackMessage = 'Range hero supprimee.';
-      if (profileId) {
-        this.loadRangeSummaries(profileId);
-      }
-    });
+    this.rangesService.deleteHero(this.currentRangeId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.startDraft();
+        this.feedbackMessage = 'Range hero supprimee.';
+        if (profileId) {
+          this.loadRangeSummaries(profileId);
+        } else {
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   selectHandCode(event: HandSelectionEvent): void {
@@ -313,6 +310,7 @@ export class HeroRangesComponent implements OnInit {
 
   clearSelection(): void {
     this.selectedHandCodes = [];
+    this.cdr.markForCheck();
   }
 
   toggleHandCode(handCode: string): void {
@@ -327,6 +325,7 @@ export class HeroRangesComponent implements OnInit {
     }
 
     this.warningMessage = nextCell.enabled && !nextCell.legendCode ? 'Pensez a renseigner une legende strategique pour la cellule active.' : null;
+    this.cdr.markForCheck();
   }
 
   patchSelectedCell(patch: Partial<HeroRangeCellDto>): void {
@@ -344,6 +343,7 @@ export class HeroRangesComponent implements OnInit {
     });
     this.cellsByHandCode = updatedCells;
     this.warningMessage = null;
+    this.cdr.markForCheck();
   }
 
   private applyRange(range: HeroRangeDetail): void {
@@ -354,7 +354,7 @@ export class HeroRangesComponent implements OnInit {
       gameType: range.gameType,
       street: range.street,
       heroPosition: range.heroPosition,
-      scenarioType: range.scenarioType,
+      scenarioType: range.scenarioType ?? '',
       subScenarioCode: range.subScenarioCode ?? ''
     });
     this.metadataForm.patchValue({
@@ -369,6 +369,7 @@ export class HeroRangesComponent implements OnInit {
       return acc;
     }, {});
     this.selectedHandCodes = range.cells[0] ? [range.cells[0].handCode] : [];
+    this.cdr.markForCheck();
   }
 
   private startDraft(): void {
@@ -383,11 +384,16 @@ export class HeroRangesComponent implements OnInit {
     });
     this.cellsByHandCode = {};
     this.selectedHandCodes = [];
+    this.cdr.markForCheck();
   }
 
   private suggestRangeName(): string {
     const value = this.filtersForm.getRawValue();
-    return `${value.heroPosition} ${value.street} ${value.scenarioType}`;
+    return `Hero ${value.heroPosition} ${value.street}`;
+  }
+
+  private getOptionalScenarioType(): ScenarioType | null {
+    return (this.filtersForm.controls.scenarioType.value as ScenarioType | '') || null;
   }
 
   private hasEnabledCellsWithoutLegend(): boolean {
@@ -431,5 +437,6 @@ export class HeroRangesComponent implements OnInit {
       };
     });
     this.cellsByHandCode = updatedCells;
+    this.cdr.markForCheck();
   }
 }

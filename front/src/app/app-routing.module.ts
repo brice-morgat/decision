@@ -11,8 +11,8 @@ const routes: Routes = [
   },
   {
     path: 'spots',
-    loadChildren: () =>
-      import('./features/spots/spots.module').then((m) => m.SpotsModule)
+    redirectTo: 'ranges/hero',
+    pathMatch: 'full'
   },
   {
     path: 'profiles',

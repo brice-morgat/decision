@@ -75,6 +75,13 @@ public class VillainRangeContextResolver {
                 street,
                 scenarioType
         );
+        if (scenarioType == null) {
+            candidates = villainRangeSetRepository.findCandidatesWithScopesWithoutScenario(
+                    profileId,
+                    gameType,
+                    street
+            );
+        }
 
         List<VillainRangeSet> strict = candidates.stream()
                 .map(rangeSet -> scoreRange(rangeSet, villainPosition, heroPosition, triggerActionType, normalize(lineSignature), false, false))

@@ -1,4 +1,4 @@
-<section class="page" *ngIf="viewModel$ | async as vm">
+ï»¿<section class="page" *ngIf="viewModel$ | async as vm">
   <app-rule-filters
     [form]="filtersForm"
     [profiles]="vm.profiles"
@@ -12,7 +12,7 @@
       <h3>Priorite puis specificite</h3>
       <p>
         Le moteur prend d'abord la priorite la plus forte, puis tranche par specificite de contexte.
-        Garde les regles globales au minimum et reserve les exceptions aux spots clairement identifies.
+        Garde les regles globales au minimum et reserve les exceptions aux ranges ou oppositions clairement identifiees.
       </p>
     </mat-card>
 
@@ -21,7 +21,7 @@
         <div>
           <h3>{{ rule.name }}</h3>
           <p>
-            {{ rule.gameType | readableCode }} · {{ rule.street | readableCode }} ·
+            {{ rule.gameType | readableCode }} Â· {{ rule.street | readableCode }} Â·
             {{ rule.scenarioType | readableCode }}
           </p>
         </div>
@@ -69,3 +69,4 @@
     </mat-card>
   </div>
 </section>
+

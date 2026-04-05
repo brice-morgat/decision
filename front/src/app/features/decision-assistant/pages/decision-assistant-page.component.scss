@@ -1,11 +1,50 @@
-.grid {
+.assistant-page {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 20px;
 }
 
-@media (max-width: 900px) {
-  .grid {
+.assistant-page__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+}
+
+.assistant-page__header h2 {
+  margin: 0;
+}
+
+.assistant-page__header p {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  max-width: 840px;
+}
+
+.assistant-page__header mat-chip,
+.assistant-page__header .mat-mdc-chip {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.18), rgba(239, 68, 68, 0.14));
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.assistant-page__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(340px, 0.95fr);
+  gap: 20px;
+  align-items: start;
+}
+
+:host {
+  display: block;
+}
+
+.assistant-page__workspace,
+.assistant-page__result {
+  min-width: 0;
+}
+
+@media (max-width: 1480px) {
+  .assistant-page__grid {
     grid-template-columns: 1fr;
   }
 }

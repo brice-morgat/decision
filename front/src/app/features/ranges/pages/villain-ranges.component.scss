@@ -1,3 +1,5 @@
+@use '../../../../assets/styles/theme-mixins' as theme;
+
 .range-page {
   display: grid;
   gap: 1.5rem;
@@ -33,8 +35,7 @@
 }
 
 .active-choice {
-  background: rgba(10, 122, 119, 0.14);
-  border-color: var(--choice-color, #0a7a77);
+  @include theme.active-choice;
 }
 
 .range-page__grid {
@@ -67,7 +68,7 @@
 }
 
 .range-page__feedback {
-  color: #047857;
+  color: #86efac;
   margin: 0;
 }
 

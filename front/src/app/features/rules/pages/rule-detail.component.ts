@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UntypedFormArray, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
@@ -32,6 +33,8 @@ import { RulesService } from '../../../core/services/rules.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RuleDetailComponent {
+  private readonly destroyRef = inject(DestroyRef);
+
   readonly ruleId = this.route.snapshot.paramMap.get('id');
   readonly isCreateMode = !this.ruleId;
   readonly profiles$ = this.profilesService.list();
@@ -80,31 +83,42 @@ export class RuleDetailComponent {
     private readonly router: Router,
     private readonly profilesService: ProfilesService,
     private readonly rangesService: RangesService,
-    private readonly rulesService: RulesService
+    private readonly rulesService: RulesService,
+    private readonly cdr: ChangeDetectorRef
   ) {
     if (this.isCreateMode) {
       this.addCondition();
       this.addAction();
     } else {
-      this.rule$.subscribe((rule: DecisionRuleDetail | null) => {
+      this.rule$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((rule: DecisionRuleDetail | null) => {
         if (rule) {
           this.patchRule(rule);
+          this.cdr.markForCheck();
         }
       });
     }
 
-    this.form.get('profileId')?.valueChanges.subscribe((profileId: string) => {
+    this.form.get('profileId')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((profileId: string) => {
       if (!profileId) {
         this.heroRangeOptions = [];
         this.villainRangeOptions = [];
+        this.cdr.markForCheck();
         return;
       }
 
-      this.rangesService.listHero(profileId).subscribe((ranges) => {
+      this.rangesService.listHero(profileId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((ranges) => {
         this.heroRangeOptions = ranges.map((range) => ({ id: range.id, name: range.name }));
+        this.cdr.markForCheck();
       });
-      this.rangesService.listVillain(profileId).subscribe((ranges) => {
+      this.rangesService.listVillain(profileId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((ranges) => {
         this.villainRangeOptions = ranges.map((range) => ({ id: range.id, name: range.name }));
+        this.cdr.markForCheck();
       });
     });
   }

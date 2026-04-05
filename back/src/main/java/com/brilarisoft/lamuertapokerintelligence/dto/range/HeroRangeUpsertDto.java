@@ -16,7 +16,7 @@ public record HeroRangeUpsertDto(
         @NotNull GameType gameType,
         @NotNull Street street,
         @NotNull Position heroPosition,
-        @NotNull ScenarioType scenarioType,
+        ScenarioType scenarioType,
         @Size(max = 64) String subScenarioCode,
         boolean enabled,
         @NotNull Integer priority,

@@ -26,16 +26,18 @@ export interface ActionEvent {
 
 export interface DecisionRequest {
   strategyProfileId: string;
+  heroRangeSetId: string;
   villainRangeSetId?: string | null;
   villainRangePercent?: number | null;
-  gameType: GameType;
-  heroPosition: PlayerPosition;
-  villainPosition: PlayerPosition;
-  street: Street;
-  scenarioType: ScenarioType;
-  effectiveStackInBigBlinds: number;
-  potSizeInBigBlinds: number;
-  heroCards: string[];
+  gameType?: GameType | null;
+  heroPosition?: PlayerPosition | null;
+  villainPosition?: PlayerPosition | null;
+  street?: Street | null;
+  scenarioType?: ScenarioType | null;
+  effectiveStackInBigBlinds?: number | null;
+  potSizeInBigBlinds?: number | null;
+  heroHandCode: string;
+  heroCards?: string[];
   boardCards?: string[];
   actionEvents?: ActionEvent[];
 }
@@ -47,6 +49,21 @@ export interface MatchedRuleCandidate {
   matchedConditionCount: number;
 }
 
+export interface DecisionAnalysis {
+  decisionSource?: string | null;
+  heroHandCode?: string | null;
+  heroLegend?: string | null;
+  villainCoveragePercent?: number | null;
+  heroHandStrengthScore?: number | null;
+  insights?: string[] | null;
+}
+
+export interface DecisionEquity {
+  heroEquityPercent?: number | null;
+  villainEquityPercent?: number | null;
+  tiePercent?: number | null;
+}
+
 export interface DecisionResult {
   status: DecisionStatus;
   recommendedAction?: ActionType | null;
@@ -54,6 +71,8 @@ export interface DecisionResult {
   matchedRuleId?: string | null;
   matchedRuleName?: string | null;
   explanation: string;
+  analysis?: DecisionAnalysis | null;
+  equity?: DecisionEquity | null;
   trace?: string[] | null;
   warnings?: string[] | null;
   matchedCandidates?: MatchedRuleCandidate[] | null;

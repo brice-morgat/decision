@@ -1,31 +1,22 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  EventEmitter,
+  Input,
+  Output,
+  inject
+} from '@angular/core';
 import { ActionEvent, DecisionRequest } from '../../../core/models/decision.models';
 import { StrategicProfileSummary } from '../../../core/models/profile.models';
+import { HeroRangeDetail, HeroRangeSummary, VillainRangeSummary } from '../../../core/models/range.models';
 import { ProfilesService } from '../../../core/services/profiles.service';
 import { RangesService } from '../../../core/services/ranges.service';
-import { VillainRangeSummary } from '../../../core/models/range.models';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { take } from 'rxjs';
-import {
-  ActionType,
-  ActorType,
-  GameType,
-  PlayerPosition,
-  ScenarioType,
-  SizingType,
-  Street
-} from '../../../core/models/referentials';
+import { ActionType, ActorType, SizingType, Street, StrategyLegend } from '../../../core/models/referentials';
 import { buildHandMatrixCodes, formatHandCode, HAND_RANKS } from '../../ranges/utils/poker-hand-codes';
-
-interface DecisionSpotOption {
-  code: string;
-  label: string;
-  heroPosition: PlayerPosition;
-  villainPosition: PlayerPosition;
-  scenarioType: ScenarioType;
-  street: Street;
-  defaultFacingAction: ActionType;
-}
-type VillainInputMode = 'CUSTOM' | 'PERCENT';
 
 @Component({
   selector: 'app-decision-context-form',
@@ -34,187 +25,209 @@ type VillainInputMode = 'CUSTOM' | 'PERCENT';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DecisionContextFormComponent {
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly defaultVillainRangePercent = 80;
   @Input() submitting = false;
   @Input() errorMessage: string | null = null;
 
-  readonly handRanks = HAND_RANKS;
   readonly handMatrix = buildHandMatrixCodes();
-  readonly streets = Object.values(Street);
-  readonly actionTypes: ActionType[] = [ActionType.CHECK, ActionType.OPEN, ActionType.CALL, ActionType.BET, ActionType.RAISE, ActionType.THREE_BET, ActionType.SHOVE];
-  readonly sizingTypes: SizingType[] = [SizingType.BB, SizingType.POT_PERCENT, SizingType.ALL_IN];
+  readonly handRanks = HAND_RANKS;
   readonly profiles$ = this.profilesService.list();
-  readonly spotOptions: DecisionSpotOption[] = [
-    {
-      code: 'BTN_OPEN_FIRST_IN',
-      label: 'BTN open first in',
-      heroPosition: PlayerPosition.BTN,
-      villainPosition: PlayerPosition.BB,
-      scenarioType: ScenarioType.OPEN_FIRST_IN,
-      street: Street.PREFLOP,
-      defaultFacingAction: ActionType.CHECK
-    },
-    {
-      code: 'BB_VS_BTN_OPEN',
-      label: 'BB vs BTN open',
-      heroPosition: PlayerPosition.BB,
-      villainPosition: PlayerPosition.BTN,
-      scenarioType: ScenarioType.FACING_OPEN,
-      street: Street.PREFLOP,
-      defaultFacingAction: ActionType.OPEN
-    },
-    {
-      code: 'BB_VS_CO_OPEN',
-      label: 'BB vs CO open',
-      heroPosition: PlayerPosition.BB,
-      villainPosition: PlayerPosition.CO,
-      scenarioType: ScenarioType.FACING_OPEN,
-      street: Street.PREFLOP,
-      defaultFacingAction: ActionType.OPEN
-    },
-    {
-      code: 'SB_VS_BTN_OPEN',
-      label: 'SB vs BTN open',
-      heroPosition: PlayerPosition.SB,
-      villainPosition: PlayerPosition.BTN,
-      scenarioType: ScenarioType.FACING_OPEN,
-      street: Street.PREFLOP,
-      defaultFacingAction: ActionType.OPEN
-    },
-    {
-      code: 'BTN_VS_THREE_BET',
-      label: 'BTN vs 3bet',
-      heroPosition: PlayerPosition.BTN,
-      villainPosition: PlayerPosition.BB,
-      scenarioType: ScenarioType.FACING_THREE_BET,
-      street: Street.PREFLOP,
-      defaultFacingAction: ActionType.THREE_BET
-    }
-  ];
 
   @Output() submitDecision = new EventEmitter<DecisionRequest>();
 
   selectedProfileId: string | null = null;
+  selectedHeroRangeId: string | null = null;
   selectedVillainRangeSetId: string | null = null;
-  useVillainAdvancedInput = false;
-  villainInputMode: VillainInputMode = 'CUSTOM';
-  villainRangePercent = 35;
-  selectedSpotCode = 'BTN_OPEN_FIRST_IN';
-  selectedHandCode = 'AKS';
-  selectedFacingAction: ActionType = ActionType.OPEN;
-  selectedSizingType: SizingType = SizingType.BB;
-  selectedSizingValue = 2.5;
+  villainInputMode: 'PERCENT' | 'RANGE' = 'PERCENT';
+  villainRangePercent = this.defaultVillainRangePercent;
+  selectedHeroRange: HeroRangeDetail | null = null;
+  selectedHandCode: string | null = null;
+  heroRanges: HeroRangeSummary[] = [];
+  villainRanges: VillainRangeSummary[] = [];
   showAdvanced = false;
   effectiveStackInBigBlinds = 100;
-  potSizeInBigBlinds = 2.5;
+  potSizeInBigBlinds = 0;
   boardCards = '';
   actionSequence = '';
-  villainRanges: VillainRangeSummary[] = [];
 
   constructor(
     private readonly profilesService: ProfilesService,
-    private readonly rangesService: RangesService
+    private readonly rangesService: RangesService,
+    private readonly cdr: ChangeDetectorRef
   ) {
-    this.applySpotTemplate(this.selectedSpotCode);
-    this.profiles$.pipe(take(1)).subscribe((profiles) => {
+    this.profiles$.pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe((profiles) => {
       if (profiles.length > 0) {
         this.onProfileChange(profiles[0].id);
       }
     });
   }
 
-  get selectedSpot(): DecisionSpotOption {
-    return this.spotOptions.find((spot) => spot.code === this.selectedSpotCode) || this.spotOptions[0];
+  get activeHeroHandCodes(): Set<string> {
+    return new Set(
+      (this.selectedHeroRange?.cells ?? [])
+        .filter((cell) => cell.enabled && !!cell.legendCode)
+        .map((cell) => cell.handCode)
+    );
+  }
+
+  get selectedHeroRangeName(): string {
+    return this.selectedHeroRange?.name ?? 'Selectionnez une range hero';
+  }
+
+  get selectedHeroCell() {
+    return this.selectedHeroRange?.cells.find((cell) => cell.handCode === this.selectedHandCode) ?? null;
+  }
+
+  get selectedHeroLegend(): StrategyLegend | null {
+    return this.selectedHeroCell?.legendCode ?? null;
+  }
+
+  get enabledHandsCount(): number {
+    return this.selectedHeroRange?.cells.filter((cell) => cell.enabled).length ?? 0;
+  }
+
+  get villainRangeName(): string {
+    if (this.villainInputMode === 'PERCENT') {
+      return `Range synthetique ${this.villainRangePercent}%`;
+    }
+    return this.selectedVillainRange()?.name ?? 'Aucune range vilain';
   }
 
   submit(profiles: StrategicProfileSummary[]): void {
     const profile = profiles.find((item) => item.id === this.selectedProfileId) || profiles[0];
-    if (!profile || !this.selectedHandCode) {
+    if (!profile || !this.selectedHeroRange || !this.selectedHandCode) {
       return;
     }
 
-    const events = this.parseActionSequence(this.actionSequence);
-    const nextOrderIndex = events.length === 0 ? 1 : Math.max(...events.map((event) => event.orderIndex)) + 1;
-
-    events.push({
-      orderIndex: nextOrderIndex,
-      actorType: ActorType.VILLAIN,
-      actorPosition: this.selectedSpot.villainPosition,
-      street: this.selectedSpot.street,
-      actionCode: this.selectedFacingAction,
-      sizingType: this.selectedSizingValue ? this.selectedSizingType : null,
-      sizingValue: this.selectedSizingValue || null
-    });
-
     this.submitDecision.emit({
       strategyProfileId: profile.id,
-      villainRangeSetId: this.useVillainAdvancedInput && this.villainInputMode === 'CUSTOM'
-        ? this.selectedVillainRangeSetId
-        : null,
-      villainRangePercent: this.useVillainAdvancedInput && this.villainInputMode === 'PERCENT'
-        ? this.villainRangePercent
-        : null,
-      gameType: profile.gameType as GameType,
-      heroPosition: this.selectedSpot.heroPosition,
-      villainPosition: this.selectedSpot.villainPosition,
-      scenarioType: this.selectedSpot.scenarioType,
-      street: this.selectedSpot.street,
+      heroRangeSetId: this.selectedHeroRange.id,
+      villainRangeSetId: this.villainInputMode === 'RANGE' ? this.selectedVillainRangeSetId : null,
+      villainRangePercent: this.villainInputMode === 'PERCENT' ? this.villainRangePercent : null,
+      gameType: this.selectedHeroRange.gameType,
+      heroPosition: this.selectedHeroRange.heroPosition,
+      villainPosition: this.villainInputMode === 'RANGE' ? this.selectedVillainRange()?.villainPosition ?? null : null,
+      street: this.selectedHeroRange.street,
+      scenarioType: null,
       effectiveStackInBigBlinds: this.effectiveStackInBigBlinds,
       potSizeInBigBlinds: this.potSizeInBigBlinds,
-      heroCards: this.heroCardsFromHandCode(this.selectedHandCode),
+      heroHandCode: this.selectedHandCode,
       boardCards: this.splitCsv(this.boardCards),
-      actionEvents: events
+      actionEvents: this.parseActionSequence(this.actionSequence)
     });
   }
 
   onProfileChange(profileId: string): void {
     this.selectedProfileId = profileId || null;
+    this.selectedHeroRangeId = null;
     this.selectedVillainRangeSetId = null;
-    if (this.selectedProfileId) {
-      this.rangesService.listVillain(this.selectedProfileId).subscribe((ranges) => {
-        this.villainRanges = ranges;
-      });
+    this.villainInputMode = 'PERCENT';
+    this.villainRangePercent = this.defaultVillainRangePercent;
+    this.selectedHeroRange = null;
+    this.selectedHandCode = null;
+
+    if (!this.selectedProfileId) {
+      this.heroRanges = [];
+      this.villainRanges = [];
       return;
     }
-    this.villainRanges = [];
+
+    this.rangesService.listHero(this.selectedProfileId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((ranges) => {
+        this.heroRanges = ranges;
+        if (ranges.length > 0) {
+          this.onHeroRangeChange(ranges[0].id);
+        } else {
+          this.cdr.markForCheck();
+        }
+      });
+    this.rangesService.listVillain(this.selectedProfileId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((ranges) => {
+        this.villainRanges = ranges;
+        this.cdr.markForCheck();
+      });
+  }
+
+  onHeroRangeChange(heroRangeId: string): void {
+    this.selectedHeroRangeId = heroRangeId;
+    this.rangesService.getHero(heroRangeId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((range) => {
+        this.selectedHeroRange = range;
+        this.selectedHandCode = range.cells.find((cell) => cell.enabled && !!cell.legendCode)?.handCode ?? null;
+        this.cdr.markForCheck();
+      });
   }
 
   onVillainRangeChange(villainRangeSetId: string | null): void {
     this.selectedVillainRangeSetId = villainRangeSetId;
+    this.villainInputMode = 'RANGE';
   }
 
-  onVillainInputModeChange(mode: VillainInputMode): void {
-    this.villainInputMode = mode;
-    if (mode === 'CUSTOM' && this.selectedVillainRangeSetId === null && this.villainRanges.length > 0) {
+  useVillainPercentMode(): void {
+    this.villainInputMode = 'PERCENT';
+    this.selectedVillainRangeSetId = null;
+  }
+
+  useVillainRangeMode(): void {
+    this.villainInputMode = 'RANGE';
+    if (!this.selectedVillainRangeSetId && this.villainRanges.length > 0) {
       this.selectedVillainRangeSetId = this.villainRanges[0].id;
     }
   }
 
-  onSpotChange(spotCode: string): void {
-    this.selectedSpotCode = spotCode;
-    this.applySpotTemplate(spotCode);
+  onVillainRangePercentChange(value: number | string): void {
+    const parsedValue = Number(value);
+    if (Number.isNaN(parsedValue)) {
+      return;
+    }
+    this.villainRangePercent = Math.max(1, Math.min(100, Math.round(parsedValue)));
   }
 
   onSelectHandCode(handCode: string): void {
     this.selectedHandCode = handCode;
   }
 
-  onSelectFacingAction(actionType: ActionType): void {
-    this.selectedFacingAction = actionType;
+  clearBoardCards(): void {
+    this.boardCards = '';
   }
 
-  onSelectSizingType(sizingType: SizingType): void {
-    this.selectedSizingType = sizingType;
-    if (sizingType === SizingType.ALL_IN) {
-      this.selectedSizingValue = 0;
-    }
-  }
-
-  trackBySpot(_: number, spot: DecisionSpotOption): string {
-    return spot.code;
+  legendFor(handCode: string): StrategyLegend | null {
+    return this.selectedHeroRange?.cells.find((entry) => entry.handCode === handCode)?.legendCode ?? null;
   }
 
   displayHandCode(handCode: string): string {
     return formatHandCode(handCode);
+  }
+
+  resolveCellClass(handCode: string): string {
+    const cell = this.selectedHeroRange?.cells.find((entry) => entry.handCode === handCode);
+    const accent = cell?.colorCode || null;
+    const baseClass = ['matrix-cell'];
+
+    if (this.selectedHandCode === handCode) {
+      baseClass.push('matrix-cell--selected');
+    } else if (this.activeHeroHandCodes.has(handCode)) {
+      baseClass.push('matrix-cell--enabled');
+    }
+
+    if (accent) {
+      baseClass.push('matrix-cell--custom');
+    }
+
+    return baseClass.join(' ');
+  }
+
+  resolveAccentColor(handCode: string): string | null {
+    return this.selectedHeroRange?.cells.find((entry) => entry.handCode === handCode)?.colorCode ?? null;
+  }
+
+  private selectedVillainRange(): VillainRangeSummary | null {
+    return this.villainRanges.find((range) => range.id === this.selectedVillainRangeSetId) ?? null;
   }
 
   private splitCsv(value: string): string[] {
@@ -224,28 +237,11 @@ export class DecisionContextFormComponent {
       .filter((entry) => entry.length > 0);
   }
 
-  private heroCardsFromHandCode(handCode: string): string[] {
-    const firstRank = handCode[0];
-    const secondRank = handCode[1];
-    if (handCode.length === 2) {
-      return [`${firstRank}s`, `${secondRank}h`];
-    }
-
-    const suited = handCode.endsWith('S');
-    return suited
-      ? [`${firstRank}s`, `${secondRank}s`]
-      : [`${firstRank}s`, `${secondRank}d`];
-  }
-
   private parseActionSequence(raw: string): ActionEvent[] {
     const lines = raw
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
-
-    if (lines.length === 0) {
-      return [];
-    }
 
     return lines
       .map((line, index) => this.toActionEvent(line, index))
@@ -254,25 +250,21 @@ export class DecisionContextFormComponent {
 
   private toActionEvent(line: string, index: number): ActionEvent | null {
     const [streetRaw, actorRaw, actionRaw, sizingRaw] = line.split(':').map((part) => part.trim().toUpperCase());
-
     if (!streetRaw || !actorRaw || !actionRaw) {
       return null;
     }
 
-    if (!this.streets.includes(streetRaw as Street)) {
+    if (!Object.values(Street).includes(streetRaw as Street)) {
       return null;
     }
-
     if (!Object.values(ActorType).includes(actorRaw as ActorType)) {
       return null;
     }
-
-    if (!this.actionTypes.includes(actionRaw as ActionType)) {
+    if (!Object.values(ActionType).includes(actionRaw as ActionType)) {
       return null;
     }
 
     const sizingValue = sizingRaw ? Number(sizingRaw) : null;
-
     return {
       orderIndex: index + 1,
       actorType: actorRaw as ActorType,
@@ -282,13 +274,5 @@ export class DecisionContextFormComponent {
       sizingValue: sizingValue !== null && !Number.isNaN(sizingValue) ? sizingValue : null
     };
   }
-
-  private applySpotTemplate(spotCode: string): void {
-    const spot = this.spotOptions.find((option) => option.code === spotCode);
-    if (!spot) {
-      return;
-    }
-
-    this.selectedFacingAction = spot.defaultFacingAction;
-  }
 }
+

@@ -22,4 +22,11 @@ public interface HeroRangeSetRepository extends JpaRepository<HeroRangeSet, UUID
             ScenarioType scenarioType,
             String subScenarioCode
     );
+
+    List<HeroRangeSet> findByStrategyProfileIdAndGameTypeAndStreetAndHeroPositionOrderByPriorityAscUpdatedAtDesc(
+            UUID strategyProfileId,
+            GameType gameType,
+            Street street,
+            Position heroPosition
+    );
 }

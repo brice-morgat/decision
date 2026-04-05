@@ -79,15 +79,7 @@ public class HeroRangeServiceImpl implements HeroRangeService {
     @Transactional(readOnly = true)
     public HeroRangeDetailDto getRangeByContext(HeroRangeContextQueryDto query) {
         validateContext(query);
-        HeroRangeSet rangeSet = heroRangeSetRepository
-                .findByStrategyProfileIdAndGameTypeAndStreetAndHeroPositionAndScenarioTypeAndSubScenarioCode(
-                        query.profileId(),
-                        query.gameType(),
-                        query.street(),
-                        query.heroPosition(),
-                        query.scenarioType(),
-                        normalizeNullable(query.subScenarioCode())
-                )
+        HeroRangeSet rangeSet = resolveRangeByContext(query)
                 .orElseThrow(() -> new NotFoundException("Hero range not found for supplied context"));
         return heroRangeMapper.toDetailDto(rangeSet);
     }
@@ -134,9 +126,36 @@ public class HeroRangeServiceImpl implements HeroRangeService {
 
     private void validateContext(HeroRangeContextQueryDto query) {
         if (query.profileId() == null || query.gameType() == null || query.street() == null
-                || query.heroPosition() == null || query.scenarioType() == null) {
+                || query.heroPosition() == null) {
             throw new BusinessValidationException("Hero range context is incomplete");
         }
+    }
+
+    private java.util.Optional<HeroRangeSet> resolveRangeByContext(HeroRangeContextQueryDto query) {
+        String normalizedSubScenario = normalizeNullable(query.subScenarioCode());
+        if (query.scenarioType() != null) {
+            java.util.Optional<HeroRangeSet> exactMatch = heroRangeSetRepository
+                    .findByStrategyProfileIdAndGameTypeAndStreetAndHeroPositionAndScenarioTypeAndSubScenarioCode(
+                            query.profileId(),
+                            query.gameType(),
+                            query.street(),
+                            query.heroPosition(),
+                            query.scenarioType(),
+                            normalizedSubScenario
+                    );
+            if (exactMatch.isPresent()) {
+                return exactMatch;
+            }
+        }
+
+        return heroRangeSetRepository.findByStrategyProfileIdAndGameTypeAndStreetAndHeroPositionOrderByPriorityAscUpdatedAtDesc(
+                        query.profileId(),
+                        query.gameType(),
+                        query.street(),
+                        query.heroPosition()
+                )
+                .stream()
+                .findFirst();
     }
 
     private void validateCells(List<HeroRangeCellDto> cells) {

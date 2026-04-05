@@ -1,5 +1,7 @@
+@use '../../../../assets/styles/theme-mixins' as theme;
+
 .cell-editor {
-  background: rgba(255, 255, 255, 0.82);
+  @include theme.panel-surface(18px);
 }
 
 .cell-editor__form {
@@ -8,7 +10,7 @@
 }
 
 .cell-editor__hint {
-  color: #64748b;
+  color: var(--ink-soft);
   font-size: 0.8rem;
   margin: 0;
 }

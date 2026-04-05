@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
 import { EMPTY, catchError, switchMap } from 'rxjs';
@@ -31,22 +32,15 @@ type VillainEditionMode = 'STANDARD' | 'ADVANCED';
 type VillainPreset = 'TIGHT' | 'STANDARD' | 'LOOSE';
 type VillainTagPreset = 'VALUE' | 'CALL' | 'BLUFF' | 'DISABLE';
 
-interface VillainQuickSpot {
-  code: string;
-  label: string;
-  villainPosition: PlayerPosition;
-  heroPosition: PlayerPosition | null;
-  scenarioType: ScenarioType;
-  street: Street;
-  triggerActionCode: ActionType | null;
-}
-
 @Component({
   selector: 'app-villain-ranges',
   templateUrl: './villain-ranges.component.html',
-  styleUrls: ['./villain-ranges.component.scss']
+  styleUrls: ['./villain-ranges.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class VillainRangesComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+
   private static readonly HAND_CODES = buildHandMatrixCodes().flat();
 
   readonly gameTypes = GAME_TYPE_OPTIONS;
@@ -56,44 +50,6 @@ export class VillainRangesComponent implements OnInit {
   readonly actionTypes = ACTION_TYPE_OPTIONS;
   readonly villainEditionModes: VillainEditionMode[] = ['STANDARD', 'ADVANCED'];
   readonly villainPresets: VillainPreset[] = ['TIGHT', 'STANDARD', 'LOOSE'];
-  readonly quickSpots: VillainQuickSpot[] = [
-    {
-      code: 'BB_VS_BTN_OPEN',
-      label: 'BB vs BTN open',
-      villainPosition: PlayerPosition.BTN,
-      heroPosition: PlayerPosition.BB,
-      scenarioType: ScenarioType.FACING_OPEN,
-      street: Street.PREFLOP,
-      triggerActionCode: ActionType.OPEN
-    },
-    {
-      code: 'BB_VS_CO_OPEN',
-      label: 'BB vs CO open',
-      villainPosition: PlayerPosition.CO,
-      heroPosition: PlayerPosition.BB,
-      scenarioType: ScenarioType.FACING_OPEN,
-      street: Street.PREFLOP,
-      triggerActionCode: ActionType.OPEN
-    },
-    {
-      code: 'SB_VS_BTN_OPEN',
-      label: 'SB vs BTN open',
-      villainPosition: PlayerPosition.BTN,
-      heroPosition: PlayerPosition.SB,
-      scenarioType: ScenarioType.FACING_OPEN,
-      street: Street.PREFLOP,
-      triggerActionCode: ActionType.OPEN
-    },
-    {
-      code: 'BTN_OPEN_FIRST_IN',
-      label: 'BTN open first in',
-      villainPosition: PlayerPosition.BB,
-      heroPosition: PlayerPosition.BTN,
-      scenarioType: ScenarioType.OPEN_FIRST_IN,
-      street: Street.PREFLOP,
-      triggerActionCode: ActionType.CHECK
-    }
-  ];
   readonly tagPresets: Array<{ code: VillainTagPreset; label: string; color: string; weight: number }> = [
     { code: 'VALUE', label: 'Value', color: '#4f7db8', weight: 100 },
     { code: 'CALL', label: 'Call', color: '#3e8b46', weight: 70 },
@@ -107,7 +63,7 @@ export class VillainRangesComponent implements OnInit {
     street: [STREET_OPTIONS[0], Validators.required],
     villainPosition: [PLAYER_POSITION_OPTIONS[0], Validators.required],
     heroPosition: [''],
-    scenarioType: [SCENARIO_TYPE_OPTIONS[0], Validators.required],
+    scenarioType: ['' as ScenarioType | ''],
     triggerActionCode: [''],
     lineSignature: ['']
   });
@@ -137,38 +93,46 @@ export class VillainRangesComponent implements OnInit {
   currentRangeId: string | null = null;
   currentRangeName = 'Nouvelle range vilain';
   feedbackMessage: string | null = null;
-  selectedQuickSpotCode = 'BB_VS_BTN_OPEN';
   selectedTagPreset: VillainTagPreset = 'VALUE';
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly route: ActivatedRoute,
     private readonly profilesService: ProfilesService,
-    private readonly rangesService: RangesService
+    private readonly rangesService: RangesService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.profilesService.list().subscribe((profiles) => {
+    this.profilesService.list()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((profiles) => {
       this.profiles = profiles;
       if (!this.filtersForm.controls.profileId.value && profiles.length > 0) {
         this.filtersForm.patchValue({
           profileId: profiles[0].id,
           gameType: profiles[0].gameType
         });
-        this.onQuickSpotSelect(this.selectedQuickSpotCode);
+        this.startDraft();
         this.loadRangeSummaries(profiles[0].id);
       }
+      this.cdr.markForCheck();
     });
 
-    this.filtersForm.controls.profileId.valueChanges.subscribe((profileId) => {
+    this.filtersForm.controls.profileId.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((profileId) => {
       if (profileId) {
         this.loadRangeSummaries(profileId);
       } else {
         this.rangeSummaries = [];
+        this.cdr.markForCheck();
       }
     });
 
-    this.route.queryParamMap.subscribe((params) => {
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
       const rangeId = params.get('rangeId');
       if (rangeId) {
         this.openRange(rangeId);
@@ -215,22 +179,6 @@ export class VillainRangesComponent implements OnInit {
     });
   }
 
-  onQuickSpotSelect(spotCode: string): void {
-    this.selectedQuickSpotCode = spotCode;
-    const spot = this.quickSpots.find((item) => item.code === spotCode);
-    if (!spot) {
-      return;
-    }
-
-    this.filtersForm.patchValue({
-      street: spot.street,
-      villainPosition: spot.villainPosition,
-      heroPosition: spot.heroPosition ?? '',
-      scenarioType: spot.scenarioType,
-      triggerActionCode: spot.triggerActionCode ?? ''
-    });
-  }
-
   onTagPresetSelect(preset: VillainTagPreset): void {
     this.selectedTagPreset = preset;
     if (this.selectedHandCodes.length > 0) {
@@ -261,9 +209,12 @@ export class VillainRangesComponent implements OnInit {
   }
 
   loadRangeSummaries(profileId: string): void {
-    this.rangesService.listVillain(profileId).subscribe((ranges) => {
-      this.rangeSummaries = ranges;
-    });
+    this.rangesService.listVillain(profileId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((ranges) => {
+        this.rangeSummaries = ranges;
+        this.cdr.markForCheck();
+      });
   }
 
   loadByContext(): void {
@@ -277,6 +228,7 @@ export class VillainRangesComponent implements OnInit {
       .getVillainByContext({
         ...this.filtersForm.getRawValue(),
         heroPosition: this.getOptionalHeroPosition(),
+        scenarioType: this.getOptionalScenarioType(),
         triggerActionCode: this.getOptionalTriggerActionCode(),
         lineSignature: this.filtersForm.controls.lineSignature.value || null
       })
@@ -284,6 +236,7 @@ export class VillainRangesComponent implements OnInit {
         catchError(() => {
           this.startDraft();
           this.feedbackMessage = 'Aucune range vilain existante. Brouillon initialise.';
+          this.cdr.markForCheck();
           return EMPTY;
         })
       )
@@ -292,7 +245,9 @@ export class VillainRangesComponent implements OnInit {
 
   openRange(rangeId: string): void {
     this.feedbackMessage = null;
-    this.rangesService.getVillain(rangeId).subscribe((range) => this.applyRange(range));
+    this.rangesService.getVillain(rangeId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((range) => this.applyRange(range));
   }
 
   newRange(): void {
@@ -348,6 +303,7 @@ export class VillainRangesComponent implements OnInit {
       ...this.filtersForm.getRawValue(),
       ...this.metadataForm.getRawValue(),
       heroPosition: this.getOptionalHeroPosition(),
+      scenarioType: this.getOptionalScenarioType(),
       triggerActionCode: this.getOptionalTriggerActionCode(),
       lineSignature: this.filtersForm.controls.lineSignature.value || null,
       notes: this.metadataForm.controls.notes.value || null,
@@ -371,6 +327,7 @@ export class VillainRangesComponent implements OnInit {
       this.applyRange(range);
       this.feedbackMessage = 'Range vilain enregistree.';
       this.loadRangeSummaries(range.profileId);
+      this.cdr.markForCheck();
     });
   }
 
@@ -380,13 +337,17 @@ export class VillainRangesComponent implements OnInit {
     }
 
     const profileId = this.filtersForm.controls.profileId.value;
-    this.rangesService.deleteVillain(this.currentRangeId).subscribe(() => {
-      this.startDraft();
-      this.feedbackMessage = 'Range vilain supprimee.';
-      if (profileId) {
-        this.loadRangeSummaries(profileId);
-      }
-    });
+    this.rangesService.deleteVillain(this.currentRangeId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.startDraft();
+        this.feedbackMessage = 'Range vilain supprimee.';
+        if (profileId) {
+          this.loadRangeSummaries(profileId);
+        } else {
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   selectHandCode(event: HandSelectionEvent): void {
@@ -412,6 +373,7 @@ export class VillainRangesComponent implements OnInit {
 
   clearSelection(): void {
     this.selectedHandCodes = [];
+    this.cdr.markForCheck();
   }
 
   toggleHandCode(handCode: string): void {
@@ -424,6 +386,7 @@ export class VillainRangesComponent implements OnInit {
     if (!this.selectedHandCodes.includes(handCode)) {
       this.selectedHandCodes = [handCode];
     }
+    this.cdr.markForCheck();
   }
 
   patchSelectedCell(patch: Partial<VillainRangeCellDto>): void {
@@ -440,6 +403,7 @@ export class VillainRangesComponent implements OnInit {
       };
     });
     this.cellsByHandCode = updatedCells;
+    this.cdr.markForCheck();
   }
 
   private applyRange(range: VillainRangeDetail): void {
@@ -451,7 +415,7 @@ export class VillainRangesComponent implements OnInit {
       street: range.street,
       villainPosition: range.villainPosition,
       heroPosition: range.heroPosition ?? '',
-      scenarioType: range.scenarioType,
+      scenarioType: range.scenarioType ?? '',
       triggerActionCode: range.triggerActionCode ?? '',
       lineSignature: range.lineSignature ?? ''
     });
@@ -467,6 +431,7 @@ export class VillainRangesComponent implements OnInit {
       return acc;
     }, {});
     this.selectedHandCodes = range.cells[0] ? [range.cells[0].handCode] : [];
+    this.cdr.markForCheck();
   }
 
   private startDraft(): void {
@@ -490,11 +455,12 @@ export class VillainRangesComponent implements OnInit {
       applyVillainPositions: [this.filtersForm.controls.villainPosition.value],
       applyTriggerActions: []
     });
+    this.cdr.markForCheck();
   }
 
   private suggestRangeName(): string {
     const value = this.filtersForm.getRawValue();
-    return `${value.villainPosition} ${value.street} ${value.scenarioType}`;
+    return `Villain ${value.villainPosition} ${value.street}`;
   }
 
   private getOptionalHeroPosition(): PlayerPosition | null {
@@ -503,6 +469,10 @@ export class VillainRangesComponent implements OnInit {
 
   private getOptionalTriggerActionCode(): ActionType | null {
     return (this.filtersForm.controls.triggerActionCode.value as ActionType | '') || null;
+  }
+
+  private getOptionalScenarioType(): ScenarioType | null {
+    return (this.filtersForm.controls.scenarioType.value as ScenarioType | '') || null;
   }
 
   private getPersistedCells(): VillainRangeCellDto[] {
@@ -594,6 +564,7 @@ export class VillainRangesComponent implements OnInit {
       };
     });
     this.cellsByHandCode = updatedCells;
+    this.cdr.markForCheck();
   }
 
   private resolveTagColor(tagCode: string | null | undefined): string {

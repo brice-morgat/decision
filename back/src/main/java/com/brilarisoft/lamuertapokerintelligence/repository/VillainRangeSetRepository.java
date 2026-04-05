@@ -44,4 +44,19 @@ public interface VillainRangeSetRepository extends JpaRepository<VillainRangeSet
             @Param("street") Street street,
             @Param("scenarioType") ScenarioType scenarioType
     );
+
+    @Query("""
+            select distinct rangeSet
+            from VillainRangeSet rangeSet
+            left join fetch rangeSet.scopes scopes
+            where rangeSet.strategyProfile.id = :strategyProfileId
+              and rangeSet.gameType = :gameType
+              and rangeSet.street = :street
+              and rangeSet.enabled = true
+            """)
+    List<VillainRangeSet> findCandidatesWithScopesWithoutScenario(
+            @Param("strategyProfileId") UUID strategyProfileId,
+            @Param("gameType") GameType gameType,
+            @Param("street") Street street
+    );
 }

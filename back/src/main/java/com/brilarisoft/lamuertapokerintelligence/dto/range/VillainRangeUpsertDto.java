@@ -20,7 +20,7 @@ public record VillainRangeUpsertDto(
         @NotNull Street street,
         @NotNull Position villainPosition,
         Position heroPosition,
-        @NotNull ScenarioType scenarioType,
+        ScenarioType scenarioType,
         ActionType triggerActionCode,
         @Size(max = 128) String lineSignature,
         boolean enabled,

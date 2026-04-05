@@ -99,6 +99,27 @@ class HeroRangeServiceImplTest {
     }
 
     @Test
+    void getRangeByContextFallsBackToRangeMetadataWhenScenarioIsMissing() {
+        UUID profileId = UUID.randomUUID();
+        HeroRangeSet rangeSet = new HeroRangeSet();
+        rangeSet.setStrategyProfile(profile(profileId));
+        rangeSet.setName("BTN preflop core");
+        rangeSet.setDescription("");
+        rangeSet.setGameType(GameType.CASH);
+        rangeSet.setStreet(Street.PREFLOP);
+        rangeSet.setHeroPosition(Position.BTN);
+        rangeSet.setScenarioType(ScenarioType.OPEN_FIRST_IN);
+
+        when(heroRangeSetRepository.findByStrategyProfileIdAndGameTypeAndStreetAndHeroPositionOrderByPriorityAscUpdatedAtDesc(
+                profileId, GameType.CASH, Street.PREFLOP, Position.BTN
+        )).thenReturn(List.of(rangeSet));
+
+        assertThat(heroRangeService.getRangeByContext(new HeroRangeContextQueryDto(
+                profileId, GameType.CASH, Street.PREFLOP, Position.BTN, null, null
+        )).name()).isEqualTo("BTN preflop core");
+    }
+
+    @Test
     void updateCellsReplacesAllCellsTransactionally() {
         HeroRangeSet rangeSet = new HeroRangeSet();
         rangeSet.setStrategyProfile(profile(UUID.randomUUID()));

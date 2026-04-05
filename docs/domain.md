@@ -6,15 +6,16 @@ Ce document rappelle les objets metier centraux et les invariants a respecter da
 
 ## Blocs fonctionnels
 
-Le domaine est structure en 7 blocs :
+Le domaine est structure en 8 blocs :
 
 1. referentiel poker
 2. profils strategiques
 3. ranges hero
 4. ranges villain
 5. situations et sequences d'actions
-6. moteur de regles et de decision
-7. historisation et analyse
+6. moteur de decision range-first
+7. moteur de regles, d'analyse et d'equity informative
+8. historisation et analyse
 
 ## Referentiels obligatoires
 
@@ -72,7 +73,7 @@ Regles de gestion retenues :
 
 ### HeroRangeSet
 
-Definit une range hero dans un contexte donne.
+Definit une base hero reutilisable choisie explicitement par l'utilisateur.
 
 Contexte minimal :
 
@@ -80,7 +81,7 @@ Contexte minimal :
 - `gameTypeCode`
 - `streetCode`
 - `heroPositionCode`
-- `scenarioTypeCode`
+- `name`
 
 Structure :
 
@@ -89,7 +90,8 @@ Structure :
 
 Invariants supplementaires :
 
-- unicite logique d'une range par contexte (`profileId`, `gameType`, `street`, `heroPosition`, `scenarioType`, `subScenarioCode`)
+- `name` est la cle lisible principale pour l'utilisateur
+- `scenarioTypeCode` reste une metadata optionnelle de compatibilite, pas un prerequis de selection
 - `handCode` canonique limite au referentiel 169 mains (`AA`, `AKS`, `AKO`)
 
 ### HeroRangeCell
@@ -113,7 +115,7 @@ Invariant critique :
 
 ### VillainRangeSet
 
-Represente une hypothese de range adverse dans un contexte donne.
+Represente une base adverse optionnelle utilisee pour affiner la lecture hero.
 
 Contexte typique :
 
@@ -122,11 +124,11 @@ Contexte typique :
 - `streetCode`
 - `villainPositionCode`
 - `heroPositionCode`
-- `scenarioTypeCode`
+- `scenarioTypeCode` optionnel
 - `triggerActionCode`
 - `lineSignature`
 
-Le moteur villain enrichit la decision, mais ne decide pas a la place du moteur central.
+Le moteur villain enrichit la decision, mais ne decide jamais a la place de la range hero.
 
 ### VillainRangeCell
 
@@ -143,7 +145,7 @@ Attributs typiques :
 Invariants critiques :
 
 - une main ne peut apparaitre qu'une seule fois dans une meme range villain
-- `weight` reste optionnel et purement descriptif tant qu'aucun moteur probabiliste ne l'exploite
+- `weight` peut etre exploite par le calcul d'equity informative, jamais par le choix de l'action recommandee
 
 ### ActionEvent / ActionSequence
 
@@ -186,7 +188,7 @@ Il doit a minima contenir :
 - range hero applicable
 - label hero applicable
 - range villain applicable
-- scenarios derives
+- metadata derivees
 
 Exemples de flags derives :
 
@@ -240,8 +242,10 @@ Doit contenir :
 - action recommandee
 - sizing recommande si disponible
 - statut
-- regle retenue
-- resume des candidates matchées
+- bloc `analysis`
+- bloc `equity` informatif si calculable
+- regle retenue comme detail technique secondaire
+- resume des candidates matchÃ©es si la trace technique est active
 - message lisible
 - avertissements
 - motif d'absence de decision si applicable

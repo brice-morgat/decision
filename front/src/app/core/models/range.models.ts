@@ -5,7 +5,7 @@ export interface HeroRangeContext {
   gameType: GameType;
   street: Street;
   heroPosition: PlayerPosition;
-  scenarioType: ScenarioType;
+  scenarioType?: ScenarioType | null;
   subScenarioCode?: string | null;
 }
 
@@ -25,7 +25,7 @@ export interface HeroRangeSummary {
   gameType: GameType;
   street: Street;
   heroPosition: PlayerPosition;
-  scenarioType: ScenarioType;
+  scenarioType?: ScenarioType | null;
   subScenarioCode?: string | null;
   enabled: boolean;
   priority: number;
@@ -56,7 +56,7 @@ export interface VillainRangeContext {
   street: Street;
   villainPosition: PlayerPosition;
   heroPosition?: PlayerPosition | null;
-  scenarioType: ScenarioType;
+  scenarioType?: ScenarioType | null;
   triggerActionCode?: ActionType | null;
   lineSignature?: string | null;
 }
@@ -86,7 +86,7 @@ export interface VillainRangeSummary {
   street: Street;
   villainPosition: PlayerPosition;
   heroPosition?: PlayerPosition | null;
-  scenarioType: ScenarioType;
+  scenarioType?: ScenarioType | null;
   triggerActionCode?: ActionType | null;
   lineSignature?: string | null;
   enabled: boolean;

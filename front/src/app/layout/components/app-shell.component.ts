@@ -9,11 +9,10 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 export class AppShellComponent {
   readonly navItems = [
     { label: 'Assistant', hint: 'Decision temps reel', link: '/assistant' },
-    { label: 'Spots', hint: 'Configuration orientee spot', link: '/spots' },
     { label: 'Profils', hint: 'Configurations de jeu', link: '/profiles' },
-    { label: 'Ranges Hero', hint: 'Edition avancee', link: '/ranges/hero' },
-    { label: 'Ranges Villain', hint: 'Edition avancee', link: '/ranges/villain' },
-    { label: 'Regles', hint: 'Priorites et actions', link: '/rules' },
+    { label: 'Ranges Hero', hint: 'Bibliotheque principale', link: '/ranges/hero' },
+    { label: 'Ranges Villain', hint: 'Opposition et ajustements', link: '/ranges/villain' },
+    { label: 'Regles', hint: 'Surcouche optionnelle', link: '/rules' },
     { label: 'Historique', hint: 'Reviews et resultats', link: '/reviews' },
     { label: 'Parametres', hint: 'Desktop et preferences', link: '/settings' }
   ];

@@ -1,3 +1,5 @@
+@use '../../../../assets/styles/theme-mixins' as theme;
+
 .profiles-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -11,10 +13,7 @@
 
 .intro-card {
   padding: 1.75rem;
-  background:
-    linear-gradient(135deg, rgba(0, 106, 106, 0.88), rgba(0, 94, 135, 0.84)),
-    linear-gradient(135deg, #0d4f5f, #165e6b);
-  color: #f4fbfb;
+  @include theme.accent-card(0.16, 0.14);
 }
 
 .intro-card h3 {
@@ -63,7 +62,7 @@
 
 .profile-card__description {
   margin: 0;
-  color: #344356;
+  color: var(--ink);
   line-height: 1.55;
   min-height: 3.1rem;
 }

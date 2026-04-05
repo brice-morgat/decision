@@ -29,7 +29,9 @@ Ce document fixe les conventions de code et de modelisation a appliquer sur ce p
 - porte la logique metier
 - porte les validations metier
 - reconstruit le contexte de decision
-- execute le moteur de regles et de decision
+- execute le moteur de decision range-first
+- execute le moteur de regles comme couche secondaire de trace ou de debug
+- calcule l'equity uniquement comme information annexe
 - gere la persistance et l'historisation
 
 ## Conventions de modelisation
@@ -60,6 +62,8 @@ Ce document fixe les conventions de code et de modelisation a appliquer sur ce p
 - garder le moteur deterministe en cas de conflit de regles
 - appliquer un ordre de resolution stable : priorite, specificite, nombre de conditions satisfaites, date de mise a jour, id stable
 - la premiere `RuleAction` ordonnee reste l'action principale exposee dans le `DecisionResult`
+- ne jamais laisser l'equity modifier `recommendedAction`
+- la source nominale de decision est : cellule hero, puis ajustement hero vs villain, puis fallback `FOLD`
 
 ## Conventions frontend
 
@@ -71,6 +75,7 @@ Ce document fixe les conventions de code et de modelisation a appliquer sur ce p
 - garder la frontiere Angular <-> Electron explicite via services adaptes
 - les composants de matrice restent UI-only : selection, toggle et edition locale; la validation metier reste backend
 - dans les ecrans de regles, n'exposer a l'utilisateur que des labels lisibles et des listes controlees, jamais les codes bruts du domaine
+- dans l'assistant, faire de la range hero la surface principale de travail; les details techniques restent secondaires
 
 ## Tests attendus
 

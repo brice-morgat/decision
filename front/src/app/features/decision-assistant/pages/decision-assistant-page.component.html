@@ -1,9 +1,20 @@
-<h2>Assistant de decision (spot-first)</h2>
-<div class="grid">
-  <app-decision-context-form
-    [submitting]="(loading$ | async) ?? false"
-    [errorMessage]="error$ | async"
-    (submitDecision)="onSubmit($event)"
-  ></app-decision-context-form>
-  <app-decision-result-card [result]="result$ | async"></app-decision-result-card>
-</div>
+<section class="assistant-page">
+  <header class="assistant-page__header">
+    <div>
+      <h2>Assistant range-first</h2>
+      <p>Selectionne une base hero, choisis une main dans la matrice, puis oppose-la a une base vilain si tu veux affiner la lecture.</p>
+    </div>
+  </header>
+
+  <div class="assistant-page__grid">
+    <app-decision-context-form
+      class="assistant-page__workspace"
+      [submitting]="(loading$ | async) ?? false"
+      [errorMessage]="error$ | async"
+      (submitDecision)="onSubmit($event)"
+    ></app-decision-context-form>
+    <app-decision-result-card
+      class="assistant-page__result"
+      [result]="result$ | async"></app-decision-result-card>
+  </div>
+</section>

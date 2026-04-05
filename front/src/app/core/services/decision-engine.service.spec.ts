@@ -3,14 +3,7 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { DecisionEngineService } from './decision-engine.service';
 import { ApiHttpService } from './api-http.service';
 import { DecisionRequest } from '../models/decision.models';
-import {
-  ActionType,
-  GameType,
-  DecisionStatus,
-  PlayerPosition,
-  ScenarioType,
-  Street
-} from '../models/referentials';
+import { ActionType, GameType, DecisionStatus, PlayerPosition, ScenarioType, Street } from '../models/referentials';
 import { APP_CONFIG } from '../config/app-config';
 
 describe('DecisionEngineService', () => {
@@ -34,6 +27,7 @@ describe('DecisionEngineService', () => {
   it('posts decision request and returns result', () => {
     const request: DecisionRequest = {
       strategyProfileId: 'profile-1',
+      heroRangeSetId: 'hero-range-1',
       gameType: GameType.CASH,
       heroPosition: PlayerPosition.BTN,
       villainPosition: PlayerPosition.BB,
@@ -41,6 +35,7 @@ describe('DecisionEngineService', () => {
       street: Street.PREFLOP,
       effectiveStackInBigBlinds: 100,
       potSizeInBigBlinds: 2.5,
+      heroHandCode: 'AKO',
       heroCards: ['As', 'Kh'],
       boardCards: [],
       actionEvents: []

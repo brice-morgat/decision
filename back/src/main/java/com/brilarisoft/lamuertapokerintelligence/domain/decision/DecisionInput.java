@@ -18,6 +18,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +75,9 @@ public class DecisionInput extends BaseEntity {
     @CollectionTable(name = "decision_input_hero_cards", joinColumns = @JoinColumn(name = "decision_input_id"))
     @Column(name = "card_code", nullable = false, length = 4)
     private List<String> heroCards = new ArrayList<>();
+
+    @Transient
+    private boolean exactHeroCards;
 
     public StrategyProfile getStrategyProfile() {
         return strategyProfile;
@@ -169,5 +173,13 @@ public class DecisionInput extends BaseEntity {
 
     public void setHeroCards(List<String> heroCards) {
         this.heroCards = heroCards;
+    }
+
+    public boolean isExactHeroCards() {
+        return exactHeroCards;
+    }
+
+    public void setExactHeroCards(boolean exactHeroCards) {
+        this.exactHeroCards = exactHeroCards;
     }
 }

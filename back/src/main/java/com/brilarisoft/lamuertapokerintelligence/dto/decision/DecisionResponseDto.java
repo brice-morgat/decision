@@ -13,6 +13,8 @@ public record DecisionResponseDto(
         UUID matchedRuleId,
         String matchedRuleName,
         String explanation,
+        DecisionAnalysisDto analysis,
+        DecisionEquityDto equity,
         List<String> trace,
         List<String> warnings,
         List<MatchedRuleCandidateDto> matchedCandidates

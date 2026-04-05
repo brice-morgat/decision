@@ -1,0 +1,50 @@
+:root,
+:root[data-theme='midnight-blue-red'] {
+  --app-bg: #090b12;
+  --app-bg-elevated: #101522;
+  --surface: rgba(13, 18, 31, 0.88);
+  --surface-strong: rgba(18, 24, 40, 0.96);
+  --surface-raised: rgba(24, 31, 52, 0.95);
+  --surface-soft: rgba(31, 39, 61, 0.72);
+  --border: rgba(112, 133, 184, 0.18);
+  --border-strong: rgba(112, 133, 184, 0.28);
+  --ink: #eef3ff;
+  --ink-soft: #9aa7c2;
+  --ink-muted: #6f7b94;
+  --accent-blue: #3b82f6;
+  --accent-blue-soft: rgba(59, 130, 246, 0.18);
+  --accent-red: #ef4444;
+  --accent-red-soft: rgba(239, 68, 68, 0.18);
+  --accent-red-strong: #f87171;
+  --accent-success: #22c55e;
+  --accent-success-soft: rgba(34, 197, 94, 0.18);
+  --accent-warning: #f59e0b;
+  --accent-warning-soft: rgba(245, 158, 11, 0.18);
+  --focus-ring: 0 0 0 2px rgba(59, 130, 246, 0.32);
+  --shadow: 0 20px 44px rgba(0, 0, 0, 0.38);
+}
+
+:root[data-theme='obsidian-crimson'] {
+  --app-bg: #08080d;
+  --app-bg-elevated: #14121c;
+  --surface: rgba(19, 15, 26, 0.9);
+  --surface-strong: rgba(23, 19, 33, 0.96);
+  --surface-raised: rgba(32, 24, 44, 0.95);
+  --surface-soft: rgba(41, 29, 56, 0.72);
+  --border: rgba(146, 110, 138, 0.22);
+  --border-strong: rgba(182, 133, 170, 0.28);
+  --ink: #f5f2ff;
+  --ink-soft: #b2a9c8;
+  --ink-muted: #877e98;
+  --accent-blue: #2563eb;
+  --accent-blue-soft: rgba(37, 99, 235, 0.18);
+  --accent-red: #f43f5e;
+  --accent-red-soft: rgba(244, 63, 94, 0.18);
+  --accent-red-strong: #fb7185;
+  --accent-success: #22c55e;
+  --accent-success-soft: rgba(34, 197, 94, 0.18);
+  --accent-warning: #fb7185;
+  --accent-warning-soft: rgba(251, 113, 133, 0.18);
+  --focus-ring: 0 0 0 2px rgba(37, 99, 235, 0.34);
+  --shadow: 0 22px 48px rgba(0, 0, 0, 0.42);
+}

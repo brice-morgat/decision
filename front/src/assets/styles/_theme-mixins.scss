@@ -1,0 +1,30 @@
+@mixin panel-surface($radius: 24px) {
+  border-radius: $radius;
+  background: linear-gradient(180deg, rgba(17, 23, 37, 0.92), rgba(25, 32, 49, 0.9));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  backdrop-filter: blur(18px);
+}
+
+@mixin accent-card($blue-opacity: 0.16, $red-opacity: 0.14) {
+  background:
+    linear-gradient(135deg, rgba(16, 24, 42, 0.96), rgba(31, 41, 73, 0.94)),
+    linear-gradient(
+      135deg,
+      rgba(59, 130, 246, $blue-opacity),
+      rgba(239, 68, 68, $red-opacity)
+    );
+  color: var(--ink);
+}
+
+@mixin active-choice {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.18), rgba(239, 68, 68, 0.12));
+  border-color: var(--choice-color, var(--accent-blue));
+}
+
+@mixin subtle-button {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-strong);
+  color: var(--ink);
+}

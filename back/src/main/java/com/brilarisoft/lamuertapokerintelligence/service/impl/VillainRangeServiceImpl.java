@@ -171,7 +171,7 @@ public class VillainRangeServiceImpl implements VillainRangeService {
 
     private void validateContext(VillainRangeContextQueryDto query) {
         if (query.profileId() == null || query.gameType() == null || query.street() == null
-                || query.villainPosition() == null || query.scenarioType() == null) {
+                || query.villainPosition() == null) {
             throw new BusinessValidationException("Villain range context is incomplete");
         }
     }

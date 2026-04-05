@@ -1,14 +1,15 @@
 @use '@angular/material' as mat;
+@use './assets/styles/theme-tokens';
 
 @include mat.core();
 
-$lamuerta-primary: mat.define-palette(mat.$cyan-palette, 700, 300, 900);
-$lamuerta-accent: mat.define-palette(mat.$orange-palette, 600, 300, 800);
+$lamuerta-primary: mat.define-palette(mat.$blue-palette, 700, 400, 900);
+$lamuerta-accent: mat.define-palette(mat.$red-palette, 500, 300, 700);
 $lamuerta-warn: mat.define-palette(mat.$red-palette, 700);
 $lamuerta-typography: mat.define-typography-config(
   $font-family: 'Bahnschrift, "Segoe UI Variable", "Segoe UI", sans-serif'
 );
-$lamuerta-theme: mat.define-light-theme((
+$lamuerta-theme: mat.define-dark-theme((
   color: (
     primary: $lamuerta-primary,
     accent: $lamuerta-accent,
@@ -20,20 +21,7 @@ $lamuerta-theme: mat.define-light-theme((
 
 html {
   @include mat.all-component-themes($lamuerta-theme);
-  color-scheme: light;
-}
-
-:root {
-  --app-bg: #eef3f6;
-  --surface: rgba(255, 255, 255, 0.82);
-  --surface-strong: rgba(255, 255, 255, 0.94);
-  --border: rgba(20, 32, 46, 0.08);
-  --ink: #16202e;
-  --ink-soft: #526173;
-  --accent: #006a6a;
-  --accent-soft: #d3f1ee;
-  --warn-soft: #fff2dc;
-  --shadow: 0 18px 44px rgba(16, 33, 48, 0.12);
+  color-scheme: dark;
 }
 
 * {
@@ -50,9 +38,10 @@ body {
   font-family: 'Bahnschrift', 'Segoe UI Variable', 'Segoe UI', sans-serif;
   color: var(--ink);
   background:
-    radial-gradient(circle at top left, rgba(0, 153, 153, 0.15), transparent 32%),
-    radial-gradient(circle at top right, rgba(247, 148, 29, 0.16), transparent 28%),
-    linear-gradient(180deg, #f9fbfc 0%, #edf3f5 100%);
+    radial-gradient(circle at 12% 12%, rgba(59, 130, 246, 0.14), transparent 26%),
+    radial-gradient(circle at 88% 14%, rgba(239, 68, 68, 0.12), transparent 22%),
+    radial-gradient(circle at 50% 100%, rgba(15, 23, 42, 0.8), transparent 40%),
+    linear-gradient(180deg, #090b12 0%, #0d1220 48%, #0b1020 100%);
 }
 
 .page {
@@ -71,6 +60,7 @@ body {
   margin: 0;
   font-size: 1.85rem;
   line-height: 1.1;
+  color: var(--ink);
 }
 
 .page-header p {
@@ -80,26 +70,103 @@ body {
 }
 
 .glass-card {
-  background: var(--surface);
+  background: linear-gradient(180deg, rgba(17, 23, 37, 0.92), rgba(25, 32, 49, 0.9));
   border: 1px solid var(--border);
   border-radius: 24px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
+  color: var(--ink);
 }
 
 .chip-positive {
-  background: #daf4df !important;
-  color: #135b26 !important;
+  background: var(--accent-success-soft) !important;
+  color: #bbf7d0 !important;
 }
 
 .chip-neutral {
-  background: #e6edf3 !important;
-  color: #415468 !important;
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #dbeafe !important;
 }
 
 .chip-warn {
-  background: var(--warn-soft) !important;
-  color: #7d4b00 !important;
+  background: var(--accent-red-soft) !important;
+  color: #fecaca !important;
+}
+
+.mat-divider {
+  border-top-color: var(--border) !important;
+}
+
+.mat-mdc-card,
+.mat-expansion-panel,
+.mat-drawer,
+.mat-mdc-menu-panel,
+.mat-mdc-dialog-surface,
+.mat-mdc-select-panel {
+  background: var(--surface-strong) !important;
+  color: var(--ink) !important;
+}
+
+.mat-mdc-form-field,
+.mat-mdc-select-value,
+.mat-mdc-form-field .mdc-floating-label,
+.mat-mdc-form-field input,
+.mat-mdc-form-field textarea {
+  color: var(--ink) !important;
+}
+
+.mat-mdc-form-field-subscript-wrapper,
+.mat-mdc-form-field-hint,
+.mat-mdc-option .mdc-list-item__primary-text,
+.mat-mdc-select-arrow,
+.mat-expansion-panel-header-description {
+  color: var(--ink-soft) !important;
+}
+
+.mat-mdc-raised-button.mat-primary {
+  --mdc-protected-button-container-color: #2563eb;
+  --mdc-protected-button-label-text-color: #eff6ff;
+}
+
+.mat-mdc-unelevated-button.mat-primary,
+.mat-mdc-outlined-button.active-choice {
+  --mdc-outlined-button-outline-color: rgba(59, 130, 246, 0.6);
+}
+
+.mat-mdc-button,
+.mat-mdc-outlined-button,
+.mat-mdc-raised-button,
+.mat-mdc-unelevated-button {
+  border-radius: 14px !important;
+}
+
+.mat-mdc-outlined-button:not(.active-choice) {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--border-strong) !important;
+  color: var(--ink) !important;
+}
+
+.mat-mdc-outlined-button:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.mat-mdc-snack-bar-container,
+.mat-mdc-tooltip {
+  --mdc-snackbar-container-color: var(--surface-raised);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.42), rgba(239, 68, 68, 0.38));
 }
 
 @media (max-width: 960px) {
